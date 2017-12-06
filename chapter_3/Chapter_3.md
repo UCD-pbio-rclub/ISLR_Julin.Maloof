@@ -1,6 +1,11 @@
-# Chapter 3
-Julin N Maloof  
-12/5/2017  
+---
+title: "Chapter 3"
+author: "Julin N Maloof"
+date: "12/5/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 
 
@@ -15,44 +20,24 @@ _8. This question involves the use of simple linear regression on the Auto data 
 
 ```r
 library(ISLR)
-```
-
-```
-## Warning: package 'ISLR' was built under R version 3.4.2
-```
-
-```r
 library(tidyverse)
 ```
 
 ```
-## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr
+## ── Attaching packages ────────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
-## Warning: package 'tidyr' was built under R version 3.4.2
+## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0
 ```
 
 ```
-## Warning: package 'purrr' was built under R version 3.4.2
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.4.2
-```
-
-```
-## Conflicts with tidy packages ----------------------------------------------
-```
-
-```
-## filter(): dplyr, stats
-## lag():    dplyr, stats
+## ── Conflicts ───────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
 ```
 
 ```r
@@ -878,4 +863,424 @@ lmsummaries
 ```
 
 
+```r
+sapply(lmsummaries, function(x) x$coefficients["get(x)","Pr(>|t|)"])
+```
+
+```
+##           zn        indus         chas          nox           rm 
+## 5.506472e-06 1.450349e-21 2.094345e-01 3.751739e-23 6.346703e-07 
+##          age          dis          rad          tax      ptratio 
+## 2.854869e-16 8.519949e-19 2.693844e-56 2.357127e-47 2.942922e-11 
+##        black        lstat         medv 
+## 2.487274e-19 2.654277e-27 1.173987e-19
+```
+
+
+```r
+sapply(lmsummaries, function(x) x$adj.r.squared)
+```
+
+```
+##         zn      indus       chas        nox         rm        age 
+## 0.03828352 0.16365394 0.00114594 0.17558468 0.04618036 0.12268419 
+##        dis        rad        tax    ptratio      black      lstat 
+## 0.14245126 0.39004886 0.33830395 0.08225111 0.14658431 0.20601869 
+##       medv 
+## 0.14909551
+```
+
+### OR
+
+(see http://r4ds.had.co.nz/many-models.html)
+
+create a nested data object, one data frame for each predictor
+
+```r
+library(modelr)
+boston.nest <- boston %>% 
+  gather(key="predictor",value="value",-crim) %>%
+  group_by(predictor) %>%
+  nest()
+boston.nest # a set of data frames, one for each predictor
+```
+
+```
+## # A tibble: 13 x 2
+##    predictor               data
+##        <chr>             <list>
+##  1        zn <tibble [506 x 2]>
+##  2     indus <tibble [506 x 2]>
+##  3      chas <tibble [506 x 2]>
+##  4       nox <tibble [506 x 2]>
+##  5        rm <tibble [506 x 2]>
+##  6       age <tibble [506 x 2]>
+##  7       dis <tibble [506 x 2]>
+##  8       rad <tibble [506 x 2]>
+##  9       tax <tibble [506 x 2]>
+## 10   ptratio <tibble [506 x 2]>
+## 11     black <tibble [506 x 2]>
+## 12     lstat <tibble [506 x 2]>
+## 13      medv <tibble [506 x 2]>
+```
+
+```r
+boston.nest$data[[1]]
+```
+
+```
+## # A tibble: 506 x 2
+##       crim value
+##      <dbl> <dbl>
+##  1 0.00632  18.0
+##  2 0.02731   0.0
+##  3 0.02729   0.0
+##  4 0.03237   0.0
+##  5 0.06905   0.0
+##  6 0.02985   0.0
+##  7 0.08829  12.5
+##  8 0.14455  12.5
+##  9 0.21124  12.5
+## 10 0.17004  12.5
+## # ... with 496 more rows
+```
+
+Fit a model to each dataframe
+
+```r
+fitModel <- function(df) lm(crim ~ value, data=df)
+boston.nest <- boston.nest%>%
+  mutate(model=map(data,fitModel),
+         model.summary=map(model,summary))
+boston.nest
+```
+
+```
+## # A tibble: 13 x 4
+##    predictor               data    model    model.summary
+##        <chr>             <list>   <list>           <list>
+##  1        zn <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  2     indus <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  3      chas <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  4       nox <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  5        rm <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  6       age <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  7       dis <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  8       rad <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+##  9       tax <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+## 10   ptratio <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+## 11     black <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+## 12     lstat <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+## 13      medv <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
+```
+
+print out the summaries (but no names!)
+
+
+```r
+boston.nest$model.summary
+```
+
+```
+## [[1]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -4.429 -4.222 -2.620  1.250 84.523 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  4.45369    0.41722  10.675  < 2e-16 ***
+## value       -0.07393    0.01609  -4.594 5.51e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8.435 on 504 degrees of freedom
+## Multiple R-squared:  0.04019,	Adjusted R-squared:  0.03828 
+## F-statistic:  21.1 on 1 and 504 DF,  p-value: 5.506e-06
+## 
+## 
+## [[2]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -11.972  -2.698  -0.736   0.712  81.813 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -2.06374    0.66723  -3.093  0.00209 ** 
+## value        0.50978    0.05102   9.991  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.866 on 504 degrees of freedom
+## Multiple R-squared:  0.1653,	Adjusted R-squared:  0.1637 
+## F-statistic: 99.82 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[3]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -3.738 -3.661 -3.435  0.018 85.232 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   3.7444     0.3961   9.453   <2e-16 ***
+## value        -1.8928     1.5061  -1.257    0.209    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8.597 on 504 degrees of freedom
+## Multiple R-squared:  0.003124,	Adjusted R-squared:  0.001146 
+## F-statistic: 1.579 on 1 and 504 DF,  p-value: 0.2094
+## 
+## 
+## [[4]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -12.371  -2.738  -0.974   0.559  81.728 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  -13.720      1.699  -8.073 5.08e-15 ***
+## value         31.249      2.999  10.419  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.81 on 504 degrees of freedom
+## Multiple R-squared:  0.1772,	Adjusted R-squared:  0.1756 
+## F-statistic: 108.6 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[5]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -6.604 -3.952 -2.654  0.989 87.197 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   20.482      3.365   6.088 2.27e-09 ***
+## value         -2.684      0.532  -5.045 6.35e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8.401 on 504 degrees of freedom
+## Multiple R-squared:  0.04807,	Adjusted R-squared:  0.04618 
+## F-statistic: 25.45 on 1 and 504 DF,  p-value: 6.347e-07
+## 
+## 
+## [[6]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -6.789 -4.257 -1.230  1.527 82.849 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -3.77791    0.94398  -4.002 7.22e-05 ***
+## value        0.10779    0.01274   8.463 2.85e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8.057 on 504 degrees of freedom
+## Multiple R-squared:  0.1244,	Adjusted R-squared:  0.1227 
+## F-statistic: 71.62 on 1 and 504 DF,  p-value: 2.855e-16
+## 
+## 
+## [[7]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -6.708 -4.134 -1.527  1.516 81.674 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   9.4993     0.7304  13.006   <2e-16 ***
+## value        -1.5509     0.1683  -9.213   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.965 on 504 degrees of freedom
+## Multiple R-squared:  0.1441,	Adjusted R-squared:  0.1425 
+## F-statistic: 84.89 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[8]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -10.164  -1.381  -0.141   0.660  76.433 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -2.28716    0.44348  -5.157 3.61e-07 ***
+## value        0.61791    0.03433  17.998  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 6.718 on 504 degrees of freedom
+## Multiple R-squared:  0.3913,	Adjusted R-squared:   0.39 
+## F-statistic: 323.9 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[9]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -12.513  -2.738  -0.194   1.065  77.696 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -8.528369   0.815809  -10.45   <2e-16 ***
+## value        0.029742   0.001847   16.10   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 6.997 on 504 degrees of freedom
+## Multiple R-squared:  0.3396,	Adjusted R-squared:  0.3383 
+## F-statistic: 259.2 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[10]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -7.654 -3.985 -1.912  1.825 83.353 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -17.6469     3.1473  -5.607 3.40e-08 ***
+## value         1.1520     0.1694   6.801 2.94e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 8.24 on 504 degrees of freedom
+## Multiple R-squared:  0.08407,	Adjusted R-squared:  0.08225 
+## F-statistic: 46.26 on 1 and 504 DF,  p-value: 2.943e-11
+## 
+## 
+## [[11]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -13.756  -2.299  -2.095  -1.296  86.822 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 16.553529   1.425903  11.609   <2e-16 ***
+## value       -0.036280   0.003873  -9.367   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.946 on 504 degrees of freedom
+## Multiple R-squared:  0.1483,	Adjusted R-squared:  0.1466 
+## F-statistic: 87.74 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[12]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -13.925  -2.822  -0.664   1.079  82.862 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -3.33054    0.69376  -4.801 2.09e-06 ***
+## value        0.54880    0.04776  11.491  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.664 on 504 degrees of freedom
+## Multiple R-squared:  0.2076,	Adjusted R-squared:  0.206 
+## F-statistic:   132 on 1 and 504 DF,  p-value: < 2.2e-16
+## 
+## 
+## [[13]]
+## 
+## Call:
+## lm(formula = crim ~ value, data = df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.071 -4.022 -2.343  1.298 80.957 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 11.79654    0.93419   12.63   <2e-16 ***
+## value       -0.36316    0.03839   -9.46   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 7.934 on 504 degrees of freedom
+## Multiple R-squared:  0.1508,	Adjusted R-squared:  0.1491 
+## F-statistic: 89.49 on 1 and 504 DF,  p-value: < 2.2e-16
+```
+
+We can add columns for whatever we want to extract from the summaries....
+
+```r
+boston.nest <- boston.nest %>%
+  mutate(p_value=map_dbl(model.summary,function(x) x$coefficients["value","Pr(>|t|)"]),
+         adj.r.squared=map_dbl(model.summary, function(x) x$adj.r.squared))
+boston.nest
+```
+
+```
+## # A tibble: 13 x 6
+##    predictor               data    model    model.summary      p_value
+##        <chr>             <list>   <list>           <list>        <dbl>
+##  1        zn <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 5.506472e-06
+##  2     indus <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 1.450349e-21
+##  3      chas <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.094345e-01
+##  4       nox <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 3.751739e-23
+##  5        rm <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 6.346703e-07
+##  6       age <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.854869e-16
+##  7       dis <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 8.519949e-19
+##  8       rad <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.693844e-56
+##  9       tax <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.357127e-47
+## 10   ptratio <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.942922e-11
+## 11     black <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.487274e-19
+## 12     lstat <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 2.654277e-27
+## 13      medv <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 1.173987e-19
+## # ... with 1 more variables: adj.r.squared <dbl>
+```
 
