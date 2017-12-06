@@ -1,0 +1,251 @@
+---
+title: "Chapter 3"
+author: "Julin N Maloof"
+date: "12/5/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Dec 6th
+
+Questions 8, 13 (13g optional), 15(a)
+
+## Q8
+
+_8. This question involves the use of simple linear regression on the Auto data set._
+
+```{r}
+library(ISLR)
+library(tidyverse)
+data(Auto)
+auto <- as.tibble(Auto)
+auto
+```
+
+_(a) Use the lm() function to perform a simple linear regression with mpg as the response and horsepower as the predictor. Use the summary() function to print the results. Comment on the output. For example:_
+
+```{r}
+lm1 <- lm(mpg ~ horsepower, data = auto)
+
+summary(lm1)
+```
+
+
+_i. Is there a relationship between the predictor and the response?_
+
+Yes, there is a highly significant (negative) relationship between horsepower and mpg
+
+_ii. How strong is the relationship between the predictor and the response?_
+
+given very low p-value and very non-zero t-value,  strong
+
+_iii. Is the relationship between the predictor and the response positive or negative?_
+
+negative
+
+_iv. What is the predicted mpg associated with a horsepower of 98? What are the associated 95 % confidence and prediction intervals?_
+
+```{r}
+cat("predition at horsepower 98 and 95% confidence intervals:\n")
+predict(lm1,data.frame(horsepower=98),interval = "conf")
+cat("\npredition at horsepower 98 and 95% prediction intervals:\n")
+predict(lm1,data.frame(horsepower=98),interval = "pred")
+```
+
+_(b) Plot the response and the predictor. Use the abline() function to display the least squares regression line._
+
+```{r}
+auto %>% 
+  ggplot(aes(x=horsepower, y=mpg)) +
+           geom_point() +
+           geom_smooth(method = "lm", se=FALSE)
+
+```
+
+
+
+_(c) Use the plot() function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the fit._
+
+```{r}
+library(modelr)
+auto %>% 
+  add_residuals(lm1) %>%
+  ggplot(aes(x=horsepower, y = resid)) +
+  geom_point() +
+  geom_hline(yintercept=0)
+```
+Residuals not evenly distributed!
+
+
+```{r}
+plot(lm1,ask = FALSE)
+```
+
+## Q 13
+
+_13. In this exercise you will create some simulated data and will fit simple linear regression models to it. Make sure to use set.seed(1) prior to starting part (a) to ensure consistent results._
+
+_(a) Using the rnorm() function, create a vector, x, containing 100 observations drawn from a N (0, 1) distribution. This represents a feature, X._
+_(b) Using the rnorm() function, create a vector, eps, containing 100 observations drawn from a N(0,0.25) distribution i.e. a normal distribution with mean zero and variance 0.25._
+_(c) Using x and eps, generate a vector y according to the model Y =−1+0.5X+ε. (3.39)_
+_What is the length of the vector y? What are the values of β0 and β1 in this linear model?_
+
+```{r}
+set.seed(1)
+data13 <- tibble(
+  x = rnorm(100,mean = 0, sd = 1),
+  eps = rnorm(100,0, sqrt(0.25)),
+  y = 1 + 0.5*x + eps)
+
+data13
+  
+```
+
+$$\beta_0 = 1$$
+
+$$\beta_1=0.5$$
+length of y is 100
+
+_(d) Create a scatterplot displaying the relationship between x and y. Comment on what you observe._
+
+```{r}
+data13 %>% qplot(x,y,data=.)
+```
+
+Pretty nice linear relationship, but some scatter...
+
+_(e) Fit a least squares linear model to predict y using x. Comment on the model obtained. How do βˆ0 and βˆ1 compare to β0 and β1?_
+
+```{r}
+lm13 <- lm(y~x, data=data13)
+summary(lm13)
+confint(lm13)
+```
+
+The estimates are near the real values and the 95% confidence intervals include the real values
+
+_(f) Display the least squares line on the scatterplot obtained in (d). Draw the population regression line on the plot, in a different color. Use the legend() command to create an appropriate legend._
+
+```{r}
+data13 %>% ggplot(aes(x=x,y=y)) +
+  geom_point() +
+  geom_smooth(aes(color="blue"),method="lm",se=FALSE) +
+  geom_abline(aes(intercept=1,slope=.5,color="red")) +
+  scale_color_manual(name="legend",values=c("red"="red","blue"="blue"),labels=c("population","sample"), guide="legend")
+```
+
+(g) Now fit a polynomial regression model that predicts y using x and x2. Is there evidence that the quadratic term improves the model fit? Explain your answer.
+
+```{r}
+lm13b <- lm(y ~ x + I(x^2), data=data13)
+summary(lm13b)
+confint(lm13b)
+```
+
+The fits are pretty similar, so no real improvement.  RSE and R-squeared similar.
+
+_(h) Repeat (a)–(f) after modifying the data generation process in such a way that there is less noise in the data. The model (3.39) should remain the same. You can do this by decreasing the variance of the normal distribution used to generate the error term ε in (b). Describe your results._
+
+```{r}
+data13h <- tibble(
+  x = rnorm(100,mean = 0, sd = 1),
+  eps = rnorm(100,0, sqrt(0.1)),
+  y = 1 + 0.5*x + eps)
+
+data13h
+```
+
+```{r}
+lm13h <- lm(y ~ x, data=data13h)
+summary(lm13h)
+confint(lm13h)
+```
+
+```{r}
+data13h %>%
+  ggplot(aes(x=x,y=y)) +
+  geom_point() +
+  geom_smooth(aes(color="blue"),method="lm",se=FALSE) +
+  geom_abline(aes(intercept=1,slope=.5,color="red")) +
+  scale_color_manual(name="legend",values=c("red"="red","blue"="blue"),labels=c("population","sample"), guide="legend")
+```
+
+smaller confidence intervals, lower RSE, higher R^2
+
+(i) Repeat (a)–(f) after modifying the data generation process in such a way that there is more noise in the data. The model (3.39) should remain the same. You can do this by increasing the variance of the normal distribution used to generate the error term ε in (b). Describe your results.
+
+```{r}
+data13i <- tibble(
+  x = rnorm(100,mean = 0, sd = 1),
+  eps = rnorm(100,0, sqrt(0.5)),
+  y = 1 + 0.5*x + eps)
+
+data13h
+```
+
+```{r}
+lm13i <- lm(y ~ x, data=data13i)
+summary(lm13i)
+confint(lm13i)
+```
+
+```{r}
+data13i %>%
+  ggplot(aes(x=x,y=y)) +
+  geom_point() +
+  geom_smooth(aes(color="blue"),method="lm",se=FALSE) +
+  geom_abline(aes(intercept=1,slope=.5,color="red")) +
+  scale_color_manual(name="legend",values=c("red"="red","blue"="blue"),labels=c("population","sample"), guide="legend")
+```
+
+_(j) What are the confidence intervals for β0 and β1 based on the original data set, the noisier data set, and the less noisy data set? Comment on your results._
+
+Already discussed above in part, but...
+
+```{r}
+map(list(original=lm13,lower_var=lm13h,higher_var=lm13i),confint)
+
+map(list(original=lm13,lower_var=lm13h,higher_var=lm13i),confint) %>%
+  map(as.data.frame) %>%
+  map(rownames_to_column,var="coefficient") %>%
+  bind_rows(.id="data_source") %>%
+  ggplot(aes(x=data_source,ymin=`2.5 %`,ymax=`97.5 %`,color=coefficient)) +
+  geom_linerange(lwd=3) + 
+  ggtitle("95% Confidence Intervals") +
+  geom_hline(yintercept = c(0.5,1))
+```
+
+
+## 15a
+
+_15. This problem involves the Boston data set, which we saw in the lab for this chapter. We will now try to predict per capita crime rate using the other variables in this data set. In other words, per capita crime rate is the response, and the other variables are the predictors._
+
+_(a) For each predictor, fit a simple linear regression model to predict the response. Describe your results. In which of the models is there a statistically significant association between the predictor and the response? Create some plots to back up your assertions._
+
+```{r}
+library(MASS)
+data(Boston)
+boston <- as_tibble(Boston)
+boston
+```
+
+```{r}
+predictors <- colnames(boston)[-1]
+lmfits <- map(predictors,function(x) lm(crim ~ get(x), data=boston))
+```
+
+```{r}
+lmsummaries <- lapply(lmfits,summary)
+names(lmsummaries) <- predictors
+lmsummaries
+```
+
+```{r}
+
+```
+
