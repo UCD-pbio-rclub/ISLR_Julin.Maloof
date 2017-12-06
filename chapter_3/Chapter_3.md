@@ -24,7 +24,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ────────────────────────────── tidyverse 1.2.1 ──
+## ── Attaching packages ─────────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
@@ -35,7 +35,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Conflicts ───────────────────────────────── tidyverse_conflicts() ──
+## ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ```
@@ -974,6 +974,53 @@ boston.nest
 ## 13      medv <tibble [506 x 2]> <S3: lm> <S3: summary.lm>
 ```
 
+Now, use broom::glance to get summaries
+
+```r
+library(broom)
+```
+
+```
+## 
+## Attaching package: 'broom'
+```
+
+```
+## The following object is masked from 'package:modelr':
+## 
+##     bootstrap
+```
+
+```r
+boston_glance <- boston.nest %>%
+  mutate(glance=map(model,glance)) %>%
+  unnest(glance,.drop = TRUE)
+boston_glance
+```
+
+```
+## # A tibble: 13 x 12
+##    predictor   r.squared adj.r.squared    sigma  statistic      p.value
+##        <chr>       <dbl>         <dbl>    <dbl>      <dbl>        <dbl>
+##  1        zn 0.040187908    0.03828352 8.435290  21.102782 5.506472e-06
+##  2     indus 0.165310070    0.16365394 7.866281  99.817037 1.450349e-21
+##  3      chas 0.003123869    0.00114594 8.596615   1.579364 2.094345e-01
+##  4       nox 0.177217182    0.17558468 7.809972 108.555329 3.751739e-23
+##  5        rm 0.048069117    0.04618036 8.400586  25.450204 6.346703e-07
+##  6       age 0.124421452    0.12268419 8.056649  71.619402 2.854869e-16
+##  7       dis 0.144149375    0.14245126 7.965369  84.887810 8.519949e-19
+##  8       rad 0.391256687    0.39004886 6.717752 323.935172 2.693844e-56
+##  9       tax 0.339614243    0.33830395 6.996901 259.190294 2.357127e-47
+## 10   ptratio 0.084068439    0.08225111 8.240212  46.259453 2.942922e-11
+## 11     black 0.148274239    0.14658431 7.946150  87.739763 2.487274e-19
+## 12     lstat 0.207590933    0.20601869 7.664461 132.035125 2.654277e-27
+## 13      medv 0.150780469    0.14909551 7.934451  89.486115 1.173987e-19
+## # ... with 6 more variables: df <int>, logLik <dbl>, AIC <dbl>, BIC <dbl>,
+## #   deviance <dbl>, df.residual <int>
+```
+
+### old way...
+
 print out the summaries (but no names!)
 
 
@@ -1283,4 +1330,6 @@ boston.nest
 ## 13      medv <tibble [506 x 2]> <S3: lm> <S3: summary.lm> 1.173987e-19
 ## # ... with 1 more variables: adj.r.squared <dbl>
 ```
+
+
 

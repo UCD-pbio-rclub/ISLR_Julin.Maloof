@@ -277,6 +277,17 @@ boston.nest <- boston.nest%>%
 boston.nest
 ```
 
+Now, use broom::glance to get summaries
+```{r}
+library(broom)
+boston_glance <- boston.nest %>%
+  mutate(glance=map(model,glance)) %>%
+  unnest(glance,.drop = TRUE)
+boston_glance
+```
+
+### old way...
+
 print out the summaries (but no names!)
 
 ```{r}
@@ -290,4 +301,6 @@ boston.nest <- boston.nest %>%
          adj.r.squared=map_dbl(model.summary, function(x) x$adj.r.squared))
 boston.nest
 ```
+
+
 
