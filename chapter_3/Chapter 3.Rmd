@@ -15,6 +15,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Questions 8, 13 (13g optional), 15(a)
 
+## Q1
+
+
+_Describe the null hypotheses to which the p-values given in Table 3.4 correspond. Explain what conclusions you can draw based on these p-values. Your explanation should be phrased in terms of sales, TV, radio, and newspaper, rather than in terms of the coefficients of the linear model._
+
+* __Intercept:__ the null hypothesis is that there are no sales when there is no advertising.  The p-value is significant, indicating that there are some sales without advertising.
+* __TV:__ the null hypothesis is that changing TV advertising while holding radio and newspaper constant does not change sales. The significant p-value indicates that changing TV advertising does affect sales when holding the other predictors constant.
+* __radio:__ the null hypothesis is that changing radio advertising while holding TV and newspaper constant does not change sales. The significant p-value indicates that changing radio advertising does affect sales when holding the other predictors constant.
+* __newspaper:__ the null hypothesis is that changing newspaper advertising while holding radio and TV constant does not change sales. The insignificant p-value indicates that changing newspaper advertising does not affect sales when holding the other predictors constant.
+
+
 ## Q8
 
 _8. This question involves the use of simple linear regression on the Auto data set._
@@ -219,6 +230,57 @@ map(list(original=lm13,lower_var=lm13h,higher_var=lm13i),confint) %>%
   ggtitle("95% Confidence Intervals") +
   geom_hline(yintercept = c(0.5,1))
 ```
+
+## Q9. _This question involves the use of multiple linear regression on the Auto data set._
+
+_(a) Produce a scatterplot matrix which includes all of the variables in the data set._
+
+```{r}
+data(Auto)
+auto <- as_tibble(Auto)
+pairs(auto)
+```
+
+_(b) Compute the matrix of correlations between the variables using the function cor(). You will need to exclude the name variable, which is qualitative._
+
+```{r}
+auto %>% select(-name) %>% cor() %>% knitr::kable(digits = 3)
+```
+
+
+
+_(c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output._
+
+First, nest the data
+```{r}
+auto.nest <- auto %>%
+  select(-name) %>%
+  gather(key="predictor",value = "value", -mpg) %>%
+  group_by(predictor) %>%
+  nest()
+auto.nest
+auto.nest$data[[1]]
+```
+
+now fit the models
+
+```{r}
+auto.nest <- auto.nest %>%
+  mutate(model=map(data, function(d) lm(mpg ~ value, data=d)))
+```
+
+sweep out the summaries
+```{r}
+auto.nest %>% 
+  map(auto.nest$model,broom::glance)
+```
+
+
+For instance:
+i. Is there a relationship between the predictors and the re- sponse?
+ii. Which predictors appear to have a statistically significant relationship to the response?
+iii. What does the coefficient for the year variable suggest?
+(d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
 
 
 ## 15a
