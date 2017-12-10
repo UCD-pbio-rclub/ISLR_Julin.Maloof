@@ -251,36 +251,38 @@ auto %>% select(-name) %>% cor() %>% knitr::kable(digits = 3)
 
 _(c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output._
 
-First, nest the data
 ```{r}
-auto.nest <- auto %>%
-  select(-name) %>%
-  gather(key="predictor",value = "value", -mpg) %>%
-  group_by(predictor) %>%
-  nest()
-auto.nest
-auto.nest$data[[1]]
-```
-
-now fit the models
-
-```{r}
-auto.nest <- auto.nest %>%
-  mutate(model=map(data, function(d) lm(mpg ~ value, data=d)))
-```
-
-sweep out the summaries
-```{r}
-auto.nest %>% 
-  map(auto.nest$model,broom::glance)
+lm.auto <- lm(mpg ~ cylinders +
+                displacement +
+                horsepower +
+                weight +
+                acceleration +
+                year + 
+                origin,
+              data=auto)
+summary(lm.auto)
 ```
 
 
 For instance:
-i. Is there a relationship between the predictors and the re- sponse?
-ii. Which predictors appear to have a statistically significant relationship to the response?
-iii. What does the coefficient for the year variable suggest?
+_i. Is there a relationship between the predictors and the re- sponse?_
+
+Yes, based on over-all p-value of < 2.2 e -16
+
+_ii. Which predictors appear to have a statistically significant relationship to the response?_
+
+displacement, weight, year, origin
+
+_iii. What does the coefficient for the year variable suggest?_
+
+mpg increaeses ~ 0.75 per year when other predictors are held constant.
+
 (d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
+
+```{r}
+plot(lm.auto)
+```
+
 
 
 ## 15a
