@@ -308,6 +308,61 @@ lmsummaries
 ```
 
 ```{r}
-
+sapply(lmsummaries, function(x) x$coefficients["get(x)","Pr(>|t|)"])
 ```
+
+```{r}
+sapply(lmsummaries, function(x) x$adj.r.squared)
+```
+
+### OR
+
+(see http://r4ds.had.co.nz/many-models.html)
+
+create a nested data object, one data frame for each predictor
+```{r}
+library(modelr)
+boston.nest <- boston %>% 
+  gather(key="predictor",value="value",-crim) %>%
+  group_by(predictor) %>%
+  nest()
+boston.nest # a set of data frames, one for each predictor
+boston.nest$data[[1]]
+```
+
+Fit a model to each dataframe
+```{r}
+fitModel <- function(df) lm(crim ~ value, data=df)
+boston.nest <- boston.nest%>%
+  mutate(model=map(data,fitModel),
+         model.summary=map(model,summary))
+boston.nest
+```
+
+Now, use broom::glance to get summaries
+```{r}
+library(broom)
+boston_glance <- boston.nest %>%
+  mutate(glance=map(model,glance)) %>%
+  unnest(glance,.drop = TRUE)
+boston_glance
+```
+
+### old way...
+
+print out the summaries (but no names!)
+
+```{r}
+boston.nest$model.summary
+```
+
+We can add columns for whatever we want to extract from the summaries....
+```{r}
+boston.nest <- boston.nest %>%
+  mutate(p_value=map_dbl(model.summary,function(x) x$coefficients["value","Pr(>|t|)"]),
+         adj.r.squared=map_dbl(model.summary, function(x) x$adj.r.squared))
+boston.nest
+```
+
+
 
