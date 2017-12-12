@@ -1,11 +1,6 @@
----
-title: "Chapter 3"
-author: "Julin N Maloof"
-date: "12/5/2017"
-output: 
-  html_document: 
-    keep_md: yes
----
+# Chapter 3
+Julin N Maloof  
+12/5/2017  
 
 
 
@@ -13,31 +8,64 @@ output:
 
 Questions 8, 13 (13g optional), 15(a)
 
+## Q1
+
+
+_Describe the null hypotheses to which the p-values given in Table 3.4 correspond. Explain what conclusions you can draw based on these p-values. Your explanation should be phrased in terms of sales, TV, radio, and newspaper, rather than in terms of the coefficients of the linear model._
+
+* __Intercept:__ the null hypothesis is that there are no sales when there is no advertising.  The p-value is significant, indicating that there are some sales without advertising.
+* __TV:__ the null hypothesis is that changing TV advertising while holding radio and newspaper constant does not change sales. The significant p-value indicates that changing TV advertising does affect sales when holding the other predictors constant.
+* __radio:__ the null hypothesis is that changing radio advertising while holding TV and newspaper constant does not change sales. The significant p-value indicates that changing radio advertising does affect sales when holding the other predictors constant.
+* __newspaper:__ the null hypothesis is that changing newspaper advertising while holding radio and TV constant does not change sales. The insignificant p-value indicates that changing newspaper advertising does not affect sales when holding the other predictors constant.
+
+
 ## Q8
 
 _8. This question involves the use of simple linear regression on the Auto data set._
 
 
 ```r
+library(MASS)
 library(ISLR)
+```
+
+```
+## Warning: package 'ISLR' was built under R version 3.4.2
+```
+
+```r
 library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ─────────────────────────────── tidyverse 1.2.1 ──
+## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr
 ```
 
 ```
-## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
-## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
-## ✔ readr   1.1.1     ✔ forcats 0.2.0
+## Warning: package 'tidyr' was built under R version 3.4.2
 ```
 
 ```
-## ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()
+## Warning: package 'purrr' was built under R version 3.4.2
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.4.2
+```
+
+```
+## Conflicts with tidy packages ----------------------------------------------
+```
+
+```
+## filter(): dplyr, stats
+## lag():    dplyr, stats
+## select(): dplyr, MASS
 ```
 
 ```r
@@ -528,6 +556,245 @@ map(list(original=lm13,lower_var=lm13h,higher_var=lm13i),confint) %>%
 
 ![](Chapter_3_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
+## Q9. _This question involves the use of multiple linear regression on the Auto data set._
+
+_(a) Produce a scatterplot matrix which includes all of the variables in the data set._
+
+
+```r
+data(Auto)
+auto <- as_tibble(Auto)
+pairs(auto)
+```
+
+![](Chapter_3_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+
+_(b) Compute the matrix of correlations between the variables using the function cor(). You will need to exclude the name variable, which is qualitative._
+
+
+```r
+auto %>% select(-name) %>% cor() %>% knitr::kable(digits = 3)
+```
+
+                   mpg   cylinders   displacement   horsepower   weight   acceleration     year   origin
+-------------  -------  ----------  -------------  -----------  -------  -------------  -------  -------
+mpg              1.000      -0.778         -0.805       -0.778   -0.832          0.423    0.581    0.565
+cylinders       -0.778       1.000          0.951        0.843    0.898         -0.505   -0.346   -0.569
+displacement    -0.805       0.951          1.000        0.897    0.933         -0.544   -0.370   -0.615
+horsepower      -0.778       0.843          0.897        1.000    0.865         -0.689   -0.416   -0.455
+weight          -0.832       0.898          0.933        0.865    1.000         -0.417   -0.309   -0.585
+acceleration     0.423      -0.505         -0.544       -0.689   -0.417          1.000    0.290    0.213
+year             0.581      -0.346         -0.370       -0.416   -0.309          0.290    1.000    0.182
+origin           0.565      -0.569         -0.615       -0.455   -0.585          0.213    0.182    1.000
+
+
+
+_(c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output._
+
+
+```r
+lm.auto <- lm(mpg ~ cylinders +
+                displacement +
+                horsepower +
+                weight +
+                acceleration +
+                year + 
+                origin,
+              data=auto)
+summary(lm.auto)
+```
+
+```
+## 
+## Call:
+## lm(formula = mpg ~ cylinders + displacement + horsepower + weight + 
+##     acceleration + year + origin, data = auto)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -9.5903 -2.1565 -0.1169  1.8690 13.0604 
+## 
+## Coefficients:
+##                Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  -17.218435   4.644294  -3.707  0.00024 ***
+## cylinders     -0.493376   0.323282  -1.526  0.12780    
+## displacement   0.019896   0.007515   2.647  0.00844 ** 
+## horsepower    -0.016951   0.013787  -1.230  0.21963    
+## weight        -0.006474   0.000652  -9.929  < 2e-16 ***
+## acceleration   0.080576   0.098845   0.815  0.41548    
+## year           0.750773   0.050973  14.729  < 2e-16 ***
+## origin         1.426141   0.278136   5.127 4.67e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 3.328 on 384 degrees of freedom
+## Multiple R-squared:  0.8215,	Adjusted R-squared:  0.8182 
+## F-statistic: 252.4 on 7 and 384 DF,  p-value: < 2.2e-16
+```
+
+
+For instance:
+_i. Is there a relationship between the predictors and the re- sponse?_
+
+Yes, based on over-all p-value of < 2.2 e -16
+
+_ii. Which predictors appear to have a statistically significant relationship to the response?_
+
+displacement, weight, year, origin
+
+_iii. What does the coefficient for the year variable suggest?_
+
+mpg increaeses ~ 0.75 per year when other predictors are held constant.
+
+(d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
+
+
+```r
+plot(lm.auto)
+```
+
+![](Chapter_3_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-22-4.png)<!-- -->
+
+## Q10 _This question should be answered using the Carseats data set._
+
+_(a) Fit a multiple regression model to predict Sales using Price,
+Urban, and US._
+
+
+```r
+data("Carseats")
+lm10a <- lm(Sales ~ Price + Urban + US,data = Carseats)
+summary(lm10a)
+```
+
+```
+## 
+## Call:
+## lm(formula = Sales ~ Price + Urban + US, data = Carseats)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -6.9206 -1.6220 -0.0564  1.5786  7.0581 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 13.043469   0.651012  20.036  < 2e-16 ***
+## Price       -0.054459   0.005242 -10.389  < 2e-16 ***
+## UrbanYes    -0.021916   0.271650  -0.081    0.936    
+## USYes        1.200573   0.259042   4.635 4.86e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.472 on 396 degrees of freedom
+## Multiple R-squared:  0.2393,	Adjusted R-squared:  0.2335 
+## F-statistic: 41.52 on 3 and 396 DF,  p-value: < 2.2e-16
+```
+
+_(b) Provide an interpretation of each coefficient in the model. Be
+careful—some of the variables in the model are qualitative!_
+
+* Intercept: The predicted base level of saled if carseats were free
+* Price: Sales decreased by 54 units per increase in price (if other predicotrs held constant).
+* Urban: Are sales affected by urban vs rural store location?  N.S.
+* US: Being in the US increases sales by 1200 units (when other factors are constant).
+
+_(c) Write out the model in equation form, being careful to handle the qualitative variables properly._
+
+$$ Sales \sim \beta_0 + \beta_1*Price + \beta_2*Urban + \beta_3*US + \epsilon $$
+
+Or did they mean
+
+$$
+Sales = 13.04 - 0.05 * Price - 0.02*UrbanYes + 1.2*USYes
+$$
+_(d) For which of the predictors can you reject the null hypothesis H0 :βj =0?_
+
+Intercept, price, US
+
+(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
+
+
+```r
+lm10e <- update(lm10a, ~ . - Urban)
+summary(lm10e)
+```
+
+```
+## 
+## Call:
+## lm(formula = Sales ~ Price + US, data = Carseats)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -6.9269 -1.6286 -0.0574  1.5766  7.0515 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 13.03079    0.63098  20.652  < 2e-16 ***
+## Price       -0.05448    0.00523 -10.416  < 2e-16 ***
+## USYes        1.19964    0.25846   4.641 4.71e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.469 on 397 degrees of freedom
+## Multiple R-squared:  0.2393,	Adjusted R-squared:  0.2354 
+## F-statistic: 62.43 on 2 and 397 DF,  p-value: < 2.2e-16
+```
+
+_(f) How well do the models in (a) and (e) fit the data?_
+
+Adjusted R-squared is a bit below 0.24 meaning there is a lot of unexplained variance.
+
+(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s).
+
+
+```r
+confint(lm10e)
+```
+
+```
+##                   2.5 %      97.5 %
+## (Intercept) 11.79032020 14.27126531
+## Price       -0.06475984 -0.04419543
+## USYes        0.69151957  1.70776632
+```
+
+(h) Is there evidence of outliers or high leverage observations in the model from (e)?
+
+
+```r
+plot(lm10e)
+```
+
+![](Chapter_3_files/figure-html/unnamed-chunk-26-1.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-26-2.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-26-3.png)<!-- -->![](Chapter_3_files/figure-html/unnamed-chunk-26-4.png)<!-- -->
+
+nope, looks pretty good.
+
+Also try some 3D plotting:
+
+
+```r
+library(plot3D)
+library(broom)
+```
+
+```
+## 
+## Attaching package: 'broom'
+```
+
+```
+## The following object is masked from 'package:modelr':
+## 
+##     bootstrap
+```
+
+```r
+library(modelr)
+```
+
+
+
 
 ## 15a
 
@@ -535,21 +802,6 @@ _15. This problem involves the Boston data set, which we saw in the lab for this
 
 _(a) For each predictor, fit a simple linear regression model to predict the response. Describe your results. In which of the models is there a statistically significant association between the predictor and the response? Create some plots to back up your assertions._
 
-
-```r
-library(MASS)
-```
-
-```
-## 
-## Attaching package: 'MASS'
-```
-
-```
-## The following object is masked from 'package:dplyr':
-## 
-##     select
-```
 
 ```r
 data(Boston)
@@ -978,20 +1230,6 @@ Now, use broom::glance to get summaries
 
 ```r
 library(broom)
-```
-
-```
-## 
-## Attaching package: 'broom'
-```
-
-```
-## The following object is masked from 'package:modelr':
-## 
-##     bootstrap
-```
-
-```r
 boston_glance <- boston.nest %>%
   mutate(glance=map(model,glance)) %>%
   unnest(glance,.drop = TRUE)
@@ -1305,10 +1543,10 @@ boston.nest$model.summary
 We can add columns for whatever we want to extract from the summaries....
 
 ```r
-boston.nest <- boston.nest %>%
+boston.nest.sum <- boston.nest %>%
   mutate(p_value=map_dbl(model.summary,function(x) x$coefficients["value","Pr(>|t|)"]),
          adj.r.squared=map_dbl(model.summary, function(x) x$adj.r.squared))
-boston.nest
+boston.nest.sum
 ```
 
 ```
@@ -1331,5 +1569,151 @@ boston.nest
 ## # ... with 1 more variables: adj.r.squared <dbl>
 ```
 
+(b) Fit a multiple regression model to predict the response using all of the predictors. Describe your results. For which predictors can we reject the null hypothesis H0 : βj = 0?
 
 
+```r
+library(stringr)
+fo <- as.formula(str_c("crim ~ ", str_c(predictors, collapse = " + ")))
+lm15b <- lm(fo,data = boston)
+summary(lm15b)
+```
+
+```
+## 
+## Call:
+## lm(formula = fo, data = boston)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.924 -2.120 -0.353  1.019 75.051 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  17.033228   7.234903   2.354 0.018949 *  
+## zn            0.044855   0.018734   2.394 0.017025 *  
+## indus        -0.063855   0.083407  -0.766 0.444294    
+## chas         -0.749134   1.180147  -0.635 0.525867    
+## nox         -10.313535   5.275536  -1.955 0.051152 .  
+## rm            0.430131   0.612830   0.702 0.483089    
+## age           0.001452   0.017925   0.081 0.935488    
+## dis          -0.987176   0.281817  -3.503 0.000502 ***
+## rad           0.588209   0.088049   6.680 6.46e-11 ***
+## tax          -0.003780   0.005156  -0.733 0.463793    
+## ptratio      -0.271081   0.186450  -1.454 0.146611    
+## black        -0.007538   0.003673  -2.052 0.040702 *  
+## lstat         0.126211   0.075725   1.667 0.096208 .  
+## medv         -0.198887   0.060516  -3.287 0.001087 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 6.439 on 492 degrees of freedom
+## Multiple R-squared:  0.454,	Adjusted R-squared:  0.4396 
+## F-statistic: 31.47 on 13 and 492 DF,  p-value: < 2.2e-16
+```
+This model explains about 44% of the variance, with zn, dis, rad, black, and medv being significant predictors
+
+_(c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the x-axis, and the multiple regression coefficients from (b) on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regres- sion model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis._
+
+get the simple model regression coefficients
+
+```r
+coefs <- boston.nest %>%
+  mutate(coefficients=map(model,tidy)) %>%
+  unnest(coefficients,.drop=TRUE) %>%
+  filter(term=="value") %>%
+  dplyr::select(predictor,simple.est=estimate)
+coefs
+```
+
+```
+## # A tibble: 13 x 2
+##    predictor  simple.est
+##        <chr>       <dbl>
+##  1        zn -0.07393498
+##  2     indus  0.50977633
+##  3      chas -1.89277655
+##  4       nox 31.24853120
+##  5        rm -2.68405122
+##  6       age  0.10778623
+##  7       dis -1.55090168
+##  8       rad  0.61791093
+##  9       tax  0.02974225
+## 10   ptratio  1.15198279
+## 11     black -0.03627964
+## 12     lstat  0.54880478
+## 13      medv -0.36315992
+```
+
+add the multiple regression coefficients
+
+```r
+coefs <- as.data.frame(coef(lm15b)) %>%
+  rownames_to_column(var="predictor") %>%
+  rename(multiple.est=`coef(lm15b)`) %>%
+  right_join(coefs)
+```
+
+```
+## Joining, by = "predictor"
+```
+plot it
+
+```r
+coefs %>% 
+  ggplot(aes(x=simple.est,y=multiple.est,label=predictor)) +
+  geom_point() +
+  geom_text(nudge_x = 1)
+```
+
+![](Chapter_3_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
+
+Whoa, radically different!
+
+(d) Is there evidence of non-linear association between any of the predictors and the response? To answer this question, for each predictor X, fit a model of the form
+Y = β0 +β1X +β2X2 +β3X3 +ε.
+
+
+```r
+fitModelNL <- function(df) lm(crim ~ value + I(value^2) + I(value^3), data=df)
+boston.nest <- boston.nest %>%
+  mutate(modelNL=map(data,fitModelNL))
+boston.nest  
+```
+
+```
+## # A tibble: 13 x 5
+##    predictor               data    model    model.summary  modelNL
+##        <chr>             <list>   <list>           <list>   <list>
+##  1        zn <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  2     indus <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  3      chas <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  4       nox <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  5        rm <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  6       age <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  7       dis <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  8       rad <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+##  9       tax <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+## 10   ptratio <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+## 11     black <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+## 12     lstat <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+## 13      medv <tibble [506 x 2]> <S3: lm> <S3: summary.lm> <S3: lm>
+```
+
+
+```r
+boston_glanceNL <- boston.nest %>%
+  mutate(glanceNL=map(modelNL,glance)) %>%
+  unnest(glanceNL,.drop = TRUE) %>%
+right_join(boston_glance,by="predictor",suffix=c(".poly",".linear"))
+
+boston_glanceNL %>%
+  ggplot(aes(x=adj.r.squared.linear,y=adj.r.squared.poly,label=predictor)) +
+  geom_point() +
+  geom_text(nudge_x = .015) +
+  geom_abline(slope = 1, intercept = 0)
+```
+
+![](Chapter_3_files/figure-html/unnamed-chunk-43-1.png)<!-- -->
+
+Improved fit for some.

@@ -31,6 +31,7 @@ _Describe the null hypotheses to which the p-values given in Table 3.4 correspon
 _8. This question involves the use of simple linear regression on the Auto data set._
 
 ```{r}
+library(MASS)
 library(ISLR)
 library(tidyverse)
 data(Auto)
@@ -358,7 +359,6 @@ _15. This problem involves the Boston data set, which we saw in the lab for this
 _(a) For each predictor, fit a simple linear regression model to predict the response. Describe your results. In which of the models is there a statistically significant association between the predictor and the response? Create some plots to back up your assertions._
 
 ```{r}
-library(MASS)
 data(Boston)
 boston <- as_tibble(Boston)
 boston
@@ -426,10 +426,10 @@ boston.nest$model.summary
 
 We can add columns for whatever we want to extract from the summaries....
 ```{r}
-boston.nest <- boston.nest %>%
+boston.nest.sum <- boston.nest %>%
   mutate(p_value=map_dbl(model.summary,function(x) x$coefficients["value","Pr(>|t|)"]),
          adj.r.squared=map_dbl(model.summary, function(x) x$adj.r.squared))
-boston.nest
+boston.nest.sum
 ```
 
 (b) Fit a multiple regression model to predict the response using all of the predictors. Describe your results. For which predictors can we reject the null hypothesis H0 : βj = 0?
@@ -442,7 +442,56 @@ summary(lm15b)
 ```
 This model explains about 44% of the variance, with zn, dis, rad, black, and medv being significant predictors
 
-(c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the x-axis, and the multiple regression coefficients from (b) on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regres- sion model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis.
+_(c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the x-axis, and the multiple regression coefficients from (b) on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regres- sion model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis._
+
+get the simple model regression coefficients
+```{r}
+coefs <- boston.nest %>%
+  mutate(coefficients=map(model,tidy)) %>%
+  unnest(coefficients,.drop=TRUE) %>%
+  filter(term=="value") %>%
+  dplyr::select(predictor,simple.est=estimate)
+coefs
+```
+
+add the multiple regression coefficients
+```{r}
+coefs <- as.data.frame(coef(lm15b)) %>%
+  rownames_to_column(var="predictor") %>%
+  rename(multiple.est=`coef(lm15b)`) %>%
+  right_join(coefs)
+```
+plot it
+```{r}
+coefs %>% 
+  ggplot(aes(x=simple.est,y=multiple.est,label=predictor)) +
+  geom_point() +
+  geom_text(nudge_x = 1)
+```
+
+Whoa, radically different!
+
 (d) Is there evidence of non-linear association between any of the predictors and the response? To answer this question, for each predictor X, fit a model of the form
 Y = β0 +β1X +β2X2 +β3X3 +ε.
 
+```{r}
+fitModelNL <- function(df) lm(crim ~ value + I(value^2) + I(value^3), data=df)
+boston.nest <- boston.nest %>%
+  mutate(modelNL=map(data,fitModelNL))
+boston.nest  
+```
+
+```{r}
+boston_glanceNL <- boston.nest %>%
+  mutate(glanceNL=map(modelNL,glance)) %>%
+  unnest(glanceNL,.drop = TRUE) %>%
+right_join(boston_glance,by="predictor",suffix=c(".poly",".linear"))
+
+boston_glanceNL %>%
+  ggplot(aes(x=adj.r.squared.linear,y=adj.r.squared.poly,label=predictor)) +
+  geom_point() +
+  geom_text(nudge_x = .015) +
+  geom_abline(slope = 1, intercept = 0)
+```
+
+Improved fit for some.
