@@ -440,6 +440,7 @@ fo <- as.formula(str_c("crim ~ ", str_c(predictors, collapse = " + ")))
 lm15b <- lm(fo,data = boston)
 summary(lm15b)
 ```
+This model explains about 44% of the variance, with zn, dis, rad, black, and medv being significant predictors
 
 (c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the x-axis, and the multiple regression coefficients from (b) on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regres- sion model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis.
 (d) Is there evidence of non-linear association between any of the predictors and the response? To answer this question, for each predictor X, fit a model of the form
