@@ -283,6 +283,72 @@ mpg increaeses ~ 0.75 per year when other predictors are held constant.
 plot(lm.auto)
 ```
 
+## Q10 _This question should be answered using the Carseats data set._
+
+_(a) Fit a multiple regression model to predict Sales using Price,
+Urban, and US._
+
+```{r}
+data("Carseats")
+lm10a <- lm(Sales ~ Price + Urban + US,data = Carseats)
+summary(lm10a)
+```
+
+_(b) Provide an interpretation of each coefficient in the model. Be
+careful—some of the variables in the model are qualitative!_
+
+* Intercept: The predicted base level of saled if carseats were free
+* Price: Sales decreased by 54 units per increase in price (if other predicotrs held constant).
+* Urban: Are sales affected by urban vs rural store location?  N.S.
+* US: Being in the US increases sales by 1200 units (when other factors are constant).
+
+_(c) Write out the model in equation form, being careful to handle the qualitative variables properly._
+
+$$ Sales \sim \beta_0 + \beta_1*Price + \beta_2*Urban + \beta_3*US + \epsilon $$
+
+Or did they mean
+
+$$
+Sales = 13.04 - 0.05 * Price - 0.02*UrbanYes + 1.2*USYes
+$$
+_(d) For which of the predictors can you reject the null hypothesis H0 :βj =0?_
+
+Intercept, price, US
+
+(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
+
+```{r}
+lm10e <- update(lm10a, ~ . - Urban)
+summary(lm10e)
+```
+
+_(f) How well do the models in (a) and (e) fit the data?_
+
+Adjusted R-squared is a bit below 0.24 meaning there is a lot of unexplained variance.
+
+(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s).
+
+```{r}
+confint(lm10e)
+```
+
+(h) Is there evidence of outliers or high leverage observations in the model from (e)?
+
+```{r}
+plot(lm10e)
+```
+
+nope, looks pretty good.
+
+Also try some 3D plotting:
+
+```{r}
+library(plot3D)
+library(broom)
+library(modelr)
+```
+
+
 
 
 ## 15a
@@ -366,5 +432,16 @@ boston.nest <- boston.nest %>%
 boston.nest
 ```
 
+(b) Fit a multiple regression model to predict the response using all of the predictors. Describe your results. For which predictors can we reject the null hypothesis H0 : βj = 0?
 
+```{r}
+library(stringr)
+fo <- as.formula(str_c("crim ~ ", str_c(predictors, collapse = " + ")))
+lm15b <- lm(fo,data = boston)
+summary(lm15b)
+```
+
+(c) How do your results from (a) compare to your results from (b)? Create a plot displaying the univariate regression coefficients from (a) on the x-axis, and the multiple regression coefficients from (b) on the y-axis. That is, each predictor is displayed as a single point in the plot. Its coefficient in a simple linear regres- sion model is shown on the x-axis, and its coefficient estimate in the multiple linear regression model is shown on the y-axis.
+(d) Is there evidence of non-linear association between any of the predictors and the response? To answer this question, for each predictor X, fit a model of the form
+Y = β0 +β1X +β2X2 +β3X3 +ε.
 
