@@ -25,6 +25,33 @@ _Describe the null hypotheses to which the p-values given in Table 3.4 correspon
 * __radio:__ the null hypothesis is that changing radio advertising while holding TV and newspaper constant does not change sales. The significant p-value indicates that changing radio advertising does affect sales when holding the other predictors constant.
 * __newspaper:__ the null hypothesis is that changing newspaper advertising while holding radio and TV constant does not change sales. The insignificant p-value indicates that changing newspaper advertising does not affect sales when holding the other predictors constant.
 
+## Q2
+_Carefully explain the differences between the KNN classifier and KNN regression methods._
+
+KNN classifier is when we are trying to predict which group an observation belongs to.  The proportion of K nearest neighbors belonging to each group is used for this classification.  KNN regression is used when we are tyring to predict a numeric value given predictors.  Here the average value for K nearest neighbors, given the predictors, is used.
+
+## Q3
+
+_Suppose we have a data set with five predictors, X1 = GPA, X2 = IQ, X3 = Gender (1 for Female and 0 for Male), X4 = Interaction between GPA and IQ, and X5 = Interaction between GPA and Gender. The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get βˆ0 = 50, βˆ1 = 20 , βˆ2 = 0.07 , βˆ3 = 35 , βˆ4 = 0.01 , βˆ5 = −10 ._
+
+_(a) Which answer is correct, and why?_
+_i. For a fixed value of IQ and GPA, males earn more on average than females._
+_ii. For a fixed value of IQ and GPA, females earn more on average than males._
+_iii. For a fixed value of IQ and GPA, males earn more on average than females provided that the GPA is high enough._
+_iv. For a fixed value of IQ and GPA, females earn more on average than males provided that the GPA is high enough._
+
+The correct answer is _iii_.  Because $\hat \beta _5$ is negative the postive effect of female gender ($\hat \beta _3$) is offset at higher GPAs
+
+_(b) Predict the salary of a female with IQ of 110 and a GPA of 4.0._
+
+```{r}
+50 + 20*4 + 110 * 0.07 + 1*35 + 4*110*0.01 + 1*4*-10
+```
+
+_(c) True or false: Since the coefficient for the GPA/IQ interaction term is very small, there is very little evidence of an interaction effect. Justify your answer._
+
+FALSE.  We need to look at the p-values.  also the size of the coefficient is dependent on the scale of the predictor, not signficance per se.  
+
 
 ## Q8
 
@@ -97,6 +124,204 @@ Residuals not evenly distributed!
 ```{r}
 plot(lm1,ask = FALSE)
 ```
+## Q9. _This question involves the use of multiple linear regression on the Auto data set._
+
+_(a) Produce a scatterplot matrix which includes all of the variables in the data set._
+
+```{r}
+data(Auto)
+auto <- as_tibble(Auto)
+pairs(auto)
+```
+
+_(b) Compute the matrix of correlations between the variables using the function cor(). You will need to exclude the name variable, which is qualitative._
+
+```{r}
+auto %>% select(-name) %>% cor() %>% knitr::kable(digits = 3)
+```
+
+
+
+_(c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output._
+
+```{r}
+lm.auto <- lm(mpg ~ cylinders +
+                displacement +
+                horsepower +
+                weight +
+                acceleration +
+                year + 
+                origin,
+              data=auto)
+summary(lm.auto)
+```
+
+
+For instance:
+_i. Is there a relationship between the predictors and the re- sponse?_
+
+Yes, based on over-all p-value of < 2.2 e -16
+
+_ii. Which predictors appear to have a statistically significant relationship to the response?_
+
+displacement, weight, year, origin
+
+_iii. What does the coefficient for the year variable suggest?_
+
+mpg increases ~ 0.75 per year when other predictors are held constant.
+
+_(d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?_
+
+```{r}
+plot(lm.auto)
+```
+
+Residuals vs fitted suggest there may be some non-linearity since there is a u-shaped curve.
+
+QQ plot: a few more high residuals than expected.
+
+There is a high leverage point but its residual is not that big so no serious problems there.
+
+_(e) Use the * and : symbols to fit linear regression models with interaction effects. Do any interactions appear to be statistically significant?_
+
+Only use those predictors that were significant in the MR.  Only fit two way interactions
+
+```{r}
+lm.auto.int <- lm(mpg ~ 
+                displacement +
+                weight +
+                year + 
+                origin +
+                  displacement:weight +
+                  displacement:year +
+                  displacement:origin +
+                  weight:year +
+                  weight:origin +
+                  year:origin,
+              data=auto)
+summary(lm.auto.int)
+plot(lm.auto.int)
+```
+
+The non-linearity suggested from the fitted vs residuals is gone, but there may now be some heteroscedasctity.  QQ plot shows some outliers.
+
+_(f) Try a few different transformations of the variables, such as log(X), √X, X2. Comment on your findings._
+
+First lets look again at a pairs plot using the significant predictors from the MR:
+
+```{r}
+auto %>% 
+  select(mpg, displacement, weight, year, origin) %>%
+  pairs()
+```
+
+Both displacement and weight show some non-linearity w.r.t. mpg
+
+```{r}
+auto %>% select(mpg,displacement) %>%
+  mutate(dis2 = displacement^2, 
+         logdisp=log(displacement),
+         sqrtdispl=sqrt(displacement)) %>%
+  pairs()
+
+auto %>% select(mpg,weight) %>%
+  mutate(weight2 = weight^2, 
+         logweight=log(weight),
+         sqrtweight=sqrt(weight)) %>%
+  pairs()
+```
+
+The log transformations appear to provide the best linearity with mpg
+
+```{r}
+lm.auto.trans <- lm(mpg ~ 
+                log(displacement) +
+                log(weight) +
+                year + 
+                origin,
+              data=auto)
+summary(lm.auto.trans)
+plot(lm.auto.trans)
+```
+
+compaere this to unrransformed
+```{r}
+lm.auto.small <- lm(mpg ~ 
+                displacement +
+                weight +
+                year + 
+                origin,
+              data=auto)
+summary(lm.auto.small)
+plot(lm.auto.small)
+```
+
+The R-squared is slightly better using the transformed predictors.
+
+## Q10 _This question should be answered using the Carseats data set._
+
+_(a) Fit a multiple regression model to predict Sales using Price,
+Urban, and US._
+
+```{r}
+data("Carseats")
+lm10a <- lm(Sales ~ Price + Urban + US,data = Carseats)
+summary(lm10a)
+```
+
+_(b) Provide an interpretation of each coefficient in the model. Be
+careful—some of the variables in the model are qualitative!_
+
+* Intercept: The predicted base level of saled if carseats were free
+* Price: Sales decreased by 54 units per increase in price (if other predicotrs held constant).
+* Urban: Are sales affected by urban vs rural store location?  N.S.
+* US: Being in the US increases sales by 1200 units (when other factors are constant).
+
+_(c) Write out the model in equation form, being careful to handle the qualitative variables properly._
+
+$$ Sales \sim \beta_0 + \beta_1*Price + \beta_2*Urban + \beta_3*US + \epsilon $$
+
+Or did they mean
+
+$$
+Sales = 13.04 - 0.05 * Price - 0.02*UrbanYes + 1.2*USYes
+$$
+_(d) For which of the predictors can you reject the null hypothesis H0 :βj =0?_
+
+Intercept, price, US
+
+_(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome._
+
+```{r}
+lm10e <- update(lm10a, ~ . - Urban)
+summary(lm10e)
+```
+
+_(f) How well do the models in (a) and (e) fit the data?_
+
+Adjusted R-squared is a bit below 0.24 meaning there is a lot of unexplained variance.
+
+_(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s)._
+
+```{r}
+confint(lm10e)
+```
+
+_(h) Is there evidence of outliers or high leverage observations in the model from (e)?_
+
+```{r}
+plot(lm10e)
+```
+
+nope, looks pretty good.
+
+Also try some 3D plotting:
+
+```{r}
+library(plot3D)
+library(broom)
+library(modelr)
+```
 
 ## Q 13
 
@@ -151,7 +376,7 @@ data13 %>% ggplot(aes(x=x,y=y)) +
   scale_color_manual(name="legend",values=c("red"="red","blue"="blue"),labels=c("population","sample"), guide="legend")
 ```
 
-(g) Now fit a polynomial regression model that predicts y using x and x2. Is there evidence that the quadratic term improves the model fit? Explain your answer.
+_(g) Now fit a polynomial regression model that predicts y using x and x2. Is there evidence that the quadratic term improves the model fit? Explain your answer._
 
 ```{r}
 lm13b <- lm(y ~ x + I(x^2), data=data13)
@@ -189,7 +414,7 @@ data13h %>%
 
 smaller confidence intervals, lower RSE, higher R^2
 
-(i) Repeat (a)–(f) after modifying the data generation process in such a way that there is more noise in the data. The model (3.39) should remain the same. You can do this by increasing the variance of the normal distribution used to generate the error term ε in (b). Describe your results.
+_(i) Repeat (a)–(f) after modifying the data generation process in such a way that there is more noise in the data. The model (3.39) should remain the same. You can do this by increasing the variance of the normal distribution used to generate the error term ε in (b). Describe your results._
 
 ```{r}
 data13i <- tibble(
@@ -232,125 +457,96 @@ map(list(original=lm13,lower_var=lm13h,higher_var=lm13i),confint) %>%
   geom_hline(yintercept = c(0.5,1))
 ```
 
-## Q9. _This question involves the use of multiple linear regression on the Auto data set._
 
-_(a) Produce a scatterplot matrix which includes all of the variables in the data set._
 
-```{r}
-data(Auto)
-auto <- as_tibble(Auto)
-pairs(auto)
-```
 
-_(b) Compute the matrix of correlations between the variables using the function cor(). You will need to exclude the name variable, which is qualitative._
+## Q14. This problem focuses on the collinearity problem.
+_(a) Perform the following commands in R:_
 
 ```{r}
-auto %>% select(-name) %>% cor() %>% knitr::kable(digits = 3)
+set.seed(1)
+x1=runif(100)
+x2=0.5*x1+rnorm(100)/10
+y=2+2*x1+0.3*x2+rnorm(100)
 ```
 
-
-
-_(c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output._
-
-```{r}
-lm.auto <- lm(mpg ~ cylinders +
-                displacement +
-                horsepower +
-                weight +
-                acceleration +
-                year + 
-                origin,
-              data=auto)
-summary(lm.auto)
-```
-
-
-For instance:
-_i. Is there a relationship between the predictors and the re- sponse?_
-
-Yes, based on over-all p-value of < 2.2 e -16
-
-_ii. Which predictors appear to have a statistically significant relationship to the response?_
-
-displacement, weight, year, origin
-
-_iii. What does the coefficient for the year variable suggest?_
-
-mpg increaeses ~ 0.75 per year when other predictors are held constant.
-
-(d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
-
-```{r}
-plot(lm.auto)
-```
-
-## Q10 _This question should be answered using the Carseats data set._
-
-_(a) Fit a multiple regression model to predict Sales using Price,
-Urban, and US._
-
-```{r}
-data("Carseats")
-lm10a <- lm(Sales ~ Price + Urban + US,data = Carseats)
-summary(lm10a)
-```
-
-_(b) Provide an interpretation of each coefficient in the model. Be
-careful—some of the variables in the model are qualitative!_
-
-* Intercept: The predicted base level of saled if carseats were free
-* Price: Sales decreased by 54 units per increase in price (if other predicotrs held constant).
-* Urban: Are sales affected by urban vs rural store location?  N.S.
-* US: Being in the US increases sales by 1200 units (when other factors are constant).
-
-_(c) Write out the model in equation form, being careful to handle the qualitative variables properly._
-
-$$ Sales \sim \beta_0 + \beta_1*Price + \beta_2*Urban + \beta_3*US + \epsilon $$
-
-Or did they mean
+_The last line corresponds to creating a linear model in which y is a function of x1 and x2. Write out the form of the linear model. What are the regression coefficients?_
 
 $$
-Sales = 13.04 - 0.05 * Price - 0.02*UrbanYes + 1.2*USYes
+y = \beta_0 + \beta_1 * x1 + \beta_2 * x2 + \epsilon
 $$
-_(d) For which of the predictors can you reject the null hypothesis H0 :βj =0?_
-
-Intercept, price, US
-
-(e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.
-
+$$
+where \beta_0=2, \beta_1=2, and \beta_2=0.3
+$$
+_(b) What is the correlation between x1 and x2? Create a scatterplot displaying the relationship between the variables._
 ```{r}
-lm10e <- update(lm10a, ~ . - Urban)
-summary(lm10e)
-```
-
-_(f) How well do the models in (a) and (e) fit the data?_
-
-Adjusted R-squared is a bit below 0.24 meaning there is a lot of unexplained variance.
-
-(g) Using the model from (e), obtain 95% confidence intervals for the coefficient(s).
-
-```{r}
-confint(lm10e)
-```
-
-(h) Is there evidence of outliers or high leverage observations in the model from (e)?
-
-```{r}
-plot(lm10e)
-```
-
-nope, looks pretty good.
-
-Also try some 3D plotting:
-
-```{r}
-library(plot3D)
-library(broom)
-library(modelr)
+cor(x1,x2)
+plot(x1,x2)
 ```
 
 
+_(c) Using this data, fit a least squares regression to predict y using x1 and x2. Describe the results obtained. What are βˆ0, βˆ1, and βˆ2? How do these relate to the true β0, β1, and β2? Can you reject the null hypothesis H0 : β1 = 0? How about the null hypothesis H0 : β2 = 0?_
 
+```{r}
+lm14c <- lm(y ~ x1 + x2)
+summary(lm14c)
+```
+
+$\beta_1$ is underestimated and $\beta_2$ is overestimated.  Overall poor fit based on R-squared.  $\beta_1$ significant but not $\beta_2$ 
+
+_(d) Now fit a least squares regression to predict y using only x1. Comment on your results. Can you reject the null hypothesis H0 :β1 =0?_
+
+```{r}
+lm14d <- lm(y ~ x1)
+summary(lm14d)
+```
+
+R2 is the same, but now $\beta_1$ is estimated much better.
+
+_(e) Now fit a least squares regression to predict y using only x2. Comment on your results. Can you reject the null hypothesis H0 :β1 =0?_
+
+
+```{r}
+lm14e <- lm(y ~ x2)
+summary(lm14e)
+```
+
+R2 is less; $\beta_2$ now even more overestimated, but it is significant.
+
+_(f) Do the results obtained in (c)–(e) contradict each other? Explain your answer._
+
+Yes, in that $\beta_2$ is not significant in c but it is in e.  This is because of the co-linearity.  
+
+_(g) Now suppose we obtain one additional observation, which was unfortunately mismeasured._
+
+```{r}
+x1=c(x1, 0.1)
+x2=c(x2, 0.8)
+y=c(y,6)
+```
+
+
+_Re-fit the linear models from (c) to (e) using this new data. What effect does this new observation have on the each of the models? In each model, is this observation an outlier? A high-leverage point? Both? Explain your answers._
+
+```{r}
+lm14c2 <- lm(y ~ x1 + x2)
+summary(lm14c2)
+plot(lm14c2)
+```
+
+```{r}
+lm14d2 <- lm(y ~ x1)
+summary(lm14d2)
+plot(lm14d2)
+```
+
+```{r}
+lm14e2 <- lm(y ~ x2)
+summary(lm14e2)
+plot(lm14e2)
+```
+
+This point is a high-leverage outlier.  It flips which coefficient is significant in the MR
 
 ## 15a
 
