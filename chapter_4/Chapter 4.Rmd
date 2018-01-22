@@ -1,0 +1,79 @@
+---
+title: "Chapter 4"
+author: "Julin N Maloof"
+date: "1/21/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+ ## Q6
+ 
+_Suppose we collect data for a group of students in a statistics class with variables X1 = hours studied, X2 = undergrad GPA, and Y = receive an A. We fit a logistic regression and produce estimated coefficient, βˆ0 = −6, βˆ1 = 0.05, βˆ2 = 1_
+
+_(a) Estimate the probability that a student who studies for 40 h and has an undergrad GPA of 3.5 gets an A in the class._
+
+```{r}
+exp(-6 + 0.05*40 +1*3.5) /
+  (1 + exp(-6 + 0.05*40 +1*3.5) )
+```
+
+
+_(b) How many hours would the student in part (a) need to study to have a 50 % chance of getting an A in the class?_
+
+Easier for me to think about this if I log transform the equation
+
+log(0.5/0.5) = -6 + hours * 0.05 + 3.5
+
+```{r}
+log(1) # 0
+
+hours <- (6 -3.5) / 0.05
+
+hours
+
+```
+
+50 hours
+
+ 
+ ## Q 10 a-d
+ 
+ _10. This question should be answered using the Weekly data set, which is part of the ISLR package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010._
+ 
+_(a) Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?_
+
+_(b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?_
+
+_(c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression._
+
+_(d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010)._
+
+_(e) Repeat (d) using LDA._
+
+_(f) Repeat (d) using QDA._
+
+_(g) Repeat (d) using KNN with K = 1._
+
+_(h) Which of these methods appears to provide the best results on this data?_
+
+_(i) Experiment with different combinations of predictors, includ- ing possible transformations and interactions, for each of the methods. Report the variables, method, and associated confu- sion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
+ 
+ ## Q 11 a-c,f
+ 
+ (a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables.
+4.7 Exercises 171
+172
+4. Classification
+(b) Explore the data graphically in order to investigate the associ- ation between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scat- terplots and boxplots may be useful tools to answer this ques- tion. Describe your findings.
+(c) Split the data into a training set and a test set.
+(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
+(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
+(f) Perform logistic regression on the training data in order to pre- dict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
+(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?
+ 
