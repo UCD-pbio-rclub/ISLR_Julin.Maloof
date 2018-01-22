@@ -112,15 +112,64 @@ _(i) Experiment with different combinations of predictors, includ- ing possible 
  
 _(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables._
 
+```{r}
+library(ISLR)
+library(tidyverse)
+data(Auto)
+auto <- as.tibble(Auto)
+auto <- auto %>% mutate(mpg01=ifelse(mpg>median(mpg),1,0))
+auto
+```
+
+
 _(b) Explore the data graphically in order to investigate the association between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scatterplots and boxplots may be useful tools to answer this question. Describe your findings._
 
+```{r}
+auto %>% select(-mpg, -name) %>%
+  gather(key="key", value="value", -mpg01) %>%
+  ggplot(aes(x=as.factor(mpg01),y=value,color=as.factor(mpg01))) +
+  geom_boxplot() +
+  facet_wrap(~ key, scales = "free")
+  
+```
+
+
 _(c) Split the data into a training set and a test set._
+
+```{r}
+nrow(auto) #392
+set.seed(123)
+test.index <- sample(c(0,1),size = nrow(auto), replace = TRUE,prob = c(.75,.25)) 
+
+auto.train <- auto[test.index==0,]
+auto.test <- auto[test.index==1,]
+
+```
+
 
 _(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 _(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 _(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+```{r}
+mod11d <- auto.train %>% select(-acceleration, -mpg, -name) %>%
+  glm(mpg01 ~ . , data = ., family = "binomial")
+summary(mod11d)
+```
+
+```{r}
+mod11d.pred <- auto.test %>% select(-acceleration, -mpg, -name) %>%
+  predict(mod11d, ., type = "response")
+mod11d.pred <- ifelse(mod11d.pred>0.5,1,0)
+table(mod11d.pred,auto.test$mpg01)
+
+```
+
+```{r}
+(test.error <- sum(mod11d.pred != auto.test$mpg01)/length(mod11d.pred))
+```
 
 _(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
  

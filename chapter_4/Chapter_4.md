@@ -1,6 +1,11 @@
-# Chapter 4
-Julin N Maloof  
-1/21/2018  
+---
+title: "Chapter 4"
+author: "Julin N Maloof"
+date: "1/21/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 
 
@@ -59,44 +64,24 @@ _(a) Produce some numerical and graphical summaries of the Weekly data. Do there
 
 ```r
 library(ISLR)
-```
-
-```
-## Warning: package 'ISLR' was built under R version 3.4.2
-```
-
-```r
 library(tidyverse)
 ```
 
 ```
-## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr
+## ── Attaching packages ────────────────────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
-## Warning: package 'tidyr' was built under R version 3.4.2
+## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0
 ```
 
 ```
-## Warning: package 'purrr' was built under R version 3.4.2
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.4.2
-```
-
-```
-## Conflicts with tidy packages ----------------------------------------------
-```
-
-```
-## filter(): dplyr, stats
-## lag():    dplyr, stats
+## ── Conflicts ───────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
 ```
 
 ```r
@@ -294,14 +279,137 @@ _(i) Experiment with different combinations of predictors, includ- ing possible 
  
  ## Q 11 a-c,f
  
- (a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables.
-4.7 Exercises 171
-172
-4. Classification
-(b) Explore the data graphically in order to investigate the associ- ation between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scat- terplots and boxplots may be useful tools to answer this ques- tion. Describe your findings.
-(c) Split the data into a training set and a test set.
-(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
-(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
-(f) Perform logistic regression on the training data in order to pre- dict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?
-(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?
+_(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables._
+
+
+```r
+library(ISLR)
+library(tidyverse)
+data(Auto)
+auto <- as.tibble(Auto)
+auto <- auto %>% mutate(mpg01=ifelse(mpg>median(mpg),1,0))
+auto
+```
+
+```
+## # A tibble: 392 x 10
+##      mpg cylinders displacement horsepower weight acceleration  year
+##    <dbl>     <dbl>        <dbl>      <dbl>  <dbl>        <dbl> <dbl>
+##  1    18         8          307        130   3504         12.0    70
+##  2    15         8          350        165   3693         11.5    70
+##  3    18         8          318        150   3436         11.0    70
+##  4    16         8          304        150   3433         12.0    70
+##  5    17         8          302        140   3449         10.5    70
+##  6    15         8          429        198   4341         10.0    70
+##  7    14         8          454        220   4354          9.0    70
+##  8    14         8          440        215   4312          8.5    70
+##  9    14         8          455        225   4425         10.0    70
+## 10    15         8          390        190   3850          8.5    70
+## # ... with 382 more rows, and 3 more variables: origin <dbl>, name <fctr>,
+## #   mpg01 <dbl>
+```
+
+
+_(b) Explore the data graphically in order to investigate the association between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scatterplots and boxplots may be useful tools to answer this question. Describe your findings._
+
+
+```r
+auto %>% select(-mpg, -name) %>%
+  gather(key="key", value="value", -mpg01) %>%
+  ggplot(aes(x=as.factor(mpg01),y=value,color=as.factor(mpg01))) +
+  geom_boxplot() +
+  facet_wrap(~ key, scales = "free")
+```
+
+![](Chapter_4_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+
+_(c) Split the data into a training set and a test set._
+
+
+```r
+nrow(auto) #392
+```
+
+```
+## [1] 392
+```
+
+```r
+set.seed(123)
+test.index <- sample(c(0,1),size = nrow(auto), replace = TRUE,prob = c(.75,.25)) 
+
+auto.train <- auto[test.index==0,]
+auto.test <- auto[test.index==1,]
+```
+
+
+_(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+_(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+_(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+
+```r
+mod11d <- auto.train %>% select(-acceleration, -mpg, -name) %>%
+  glm(mpg01 ~ . , data = ., family = "binomial")
+summary(mod11d)
+```
+
+```
+## 
+## Call:
+## glm(formula = mpg01 ~ ., family = "binomial", data = .)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.37593  -0.06007  -0.00005   0.16481   2.37014  
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  -21.953771   6.326524  -3.470  0.00052 ***
+## cylinders      0.238961   0.578418   0.413  0.67951    
+## displacement  -0.019802   0.018692  -1.059  0.28941    
+## horsepower    -0.037802   0.023631  -1.600  0.10967    
+## weight        -0.004373   0.001349  -3.242  0.00119 ** 
+## year           0.517378   0.101596   5.093 3.53e-07 ***
+## origin         0.215269   0.442729   0.486  0.62680    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 411.70  on 296  degrees of freedom
+## Residual deviance: 100.63  on 290  degrees of freedom
+## AIC: 114.63
+## 
+## Number of Fisher Scoring iterations: 8
+```
+
+
+```r
+mod11d.pred <- auto.test %>% select(-acceleration, -mpg, -name) %>%
+  predict(mod11d, ., type = "response")
+mod11d.pred <- ifelse(mod11d.pred>0.5,1,0)
+table(mod11d.pred,auto.test$mpg01)
+```
+
+```
+##            
+## mod11d.pred  0  1
+##           0 40  7
+##           1  6 42
+```
+
+
+```r
+(test.error <- sum(mod11d.pred != auto.test$mpg01)/length(mod11d.pred))
+```
+
+```
+## [1] 0.1368421
+```
+
+_(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
  
