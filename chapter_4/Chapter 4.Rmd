@@ -92,13 +92,24 @@ test <- weekly %>% filter(Year>=2009)
 mod10d <- glm(Direction ~ Lag2, data=train, family="binomial")
 mod10d.pred <- predict(mod10d,newdata = test, response="binomial")
 mod10d.pred <- ifelse(mod10d.pred>.5,"Up","Down")
-mean(mod10d.pred==test$Direction)
+mean(mod10d.pred!=test$Direction)
 table(mod10d.pred, test$Direction)
 ```
 
-OK so now it does really poorly!
+OK so now it does really poorly!  56% error rate
 
 _(e) Repeat (d) using LDA._
+
+```{r}
+library(MASS)
+mod10e <- lda(Direction ~ Lag2, data=train)
+mod10e
+plot(mod10e)
+pred.10e <- predict(mod10e,newdata = test)
+table(pred.10e$class,test$Direction)
+mean(pred.10e$class!=test$Direction)
+```
+Error rate drops to 37.5%.  False positive rate has dropped dramtically, but the False Negative rate has increased.
 
 _(f) Repeat (d) using QDA._
 
@@ -106,7 +117,7 @@ _(g) Repeat (d) using KNN with K = 1._
 
 _(h) Which of these methods appears to provide the best results on this data?_
 
-_(i) Experiment with different combinations of predictors, includ- ing possible transformations and interactions, for each of the methods. Report the variables, method, and associated confu- sion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
+_(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
  
  ## Q 11 a-c,f
  
@@ -125,7 +136,7 @@ auto
 _(b) Explore the data graphically in order to investigate the association between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scatterplots and boxplots may be useful tools to answer this question. Describe your findings._
 
 ```{r}
-auto %>% select(-mpg, -name) %>%
+auto %>% dplyr::select(-mpg, -name) %>%
   gather(key="key", value="value", -mpg01) %>%
   ggplot(aes(x=as.factor(mpg01),y=value,color=as.factor(mpg01))) +
   geom_boxplot() +
@@ -149,27 +160,43 @@ auto.test <- auto[test.index==1,]
 
 _(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
+```{r}
+mod11d <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  lda(mpg01 ~ . , data = .)
+mod11d
+plot(mod11d)
+```
+```{r}
+pred.11d <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11d, .)
+table(pred.11d$class, auto.test$mpg01)
+mean(pred.11d$class!=auto.test$mpg01)
+```
+
+
 _(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 _(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 ```{r}
-mod11d <- auto.train %>% select(-acceleration, -mpg, -name) %>%
+mod11f <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
   glm(mpg01 ~ . , data = ., family = "binomial")
-summary(mod11d)
+summary(mod11f)
 ```
 
 ```{r}
-mod11d.pred <- auto.test %>% select(-acceleration, -mpg, -name) %>%
-  predict(mod11d, ., type = "response")
-mod11d.pred <- ifelse(mod11d.pred>0.5,1,0)
-table(mod11d.pred,auto.test$mpg01)
+mod11f.pred <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11f, ., type = "response")
+mod11f.pred <- ifelse(mod11f.pred>0.5,1,0)
+table(mod11f.pred,auto.test$mpg01)
 
 ```
 
 ```{r}
-(test.error <- sum(mod11d.pred != auto.test$mpg01)/length(mod11d.pred))
+mean(mod11f.pred!=auto.test$mpg01)
 ```
+
+compared to LDA, same error rate, but lower sensitivity (worse false positive), better specificity (better false negative).
 
 _(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
  

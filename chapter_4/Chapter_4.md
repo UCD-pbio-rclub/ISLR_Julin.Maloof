@@ -1,11 +1,6 @@
----
-title: "Chapter 4"
-author: "Julin N Maloof"
-date: "1/21/2018"
-output: 
-  html_document: 
-    keep_md: yes
----
+# Chapter 4
+Julin N Maloof  
+1/21/2018  
 
 
 
@@ -64,24 +59,44 @@ _(a) Produce some numerical and graphical summaries of the Weekly data. Do there
 
 ```r
 library(ISLR)
+```
+
+```
+## Warning: package 'ISLR' was built under R version 3.4.2
+```
+
+```r
 library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ────────────────────────────────────────── tidyverse 1.2.1 ──
+## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr
 ```
 
 ```
-## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
-## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
-## ✔ readr   1.1.1     ✔ forcats 0.2.0
+## Warning: package 'tidyr' was built under R version 3.4.2
 ```
 
 ```
-## ── Conflicts ───────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()
+## Warning: package 'purrr' was built under R version 3.4.2
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.4.2
+```
+
+```
+## Conflicts with tidy packages ----------------------------------------------
+```
+
+```
+## filter(): dplyr, stats
+## lag():    dplyr, stats
 ```
 
 ```r
@@ -247,11 +262,11 @@ test <- weekly %>% filter(Year>=2009)
 mod10d <- glm(Direction ~ Lag2, data=train, family="binomial")
 mod10d.pred <- predict(mod10d,newdata = test, response="binomial")
 mod10d.pred <- ifelse(mod10d.pred>.5,"Up","Down")
-mean(mod10d.pred==test$Direction)
+mean(mod10d.pred!=test$Direction)
 ```
 
 ```
-## [1] 0.4423077
+## [1] 0.5576923
 ```
 
 ```r
@@ -265,9 +280,75 @@ table(mod10d.pred, test$Direction)
 ##        Up      2  5
 ```
 
-OK so now it does really poorly!
+OK so now it does really poorly!  56% error rate
 
 _(e) Repeat (d) using LDA._
+
+
+```r
+library(MASS)
+```
+
+```
+## 
+## Attaching package: 'MASS'
+```
+
+```
+## The following object is masked from 'package:dplyr':
+## 
+##     select
+```
+
+```r
+mod10e <- lda(Direction ~ Lag2, data=train)
+mod10e
+```
+
+```
+## Call:
+## lda(Direction ~ Lag2, data = train)
+## 
+## Prior probabilities of groups:
+##      Down        Up 
+## 0.4477157 0.5522843 
+## 
+## Group means:
+##             Lag2
+## Down -0.03568254
+## Up    0.26036581
+## 
+## Coefficients of linear discriminants:
+##            LD1
+## Lag2 0.4414162
+```
+
+```r
+plot(mod10e)
+```
+
+![](Chapter_4_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
+```r
+pred.10e <- predict(mod10e,newdata = test)
+table(pred.10e$class,test$Direction)
+```
+
+```
+##       
+##        Down Up
+##   Down    9  5
+##   Up     34 56
+```
+
+```r
+mean(pred.10e$class!=test$Direction)
+```
+
+```
+## [1] 0.375
+```
+Error rate drops to 37.5%.  False positive rate has dropped dramtically, but the False Negative rate has increased.
 
 _(f) Repeat (d) using QDA._
 
@@ -275,7 +356,7 @@ _(g) Repeat (d) using KNN with K = 1._
 
 _(h) Which of these methods appears to provide the best results on this data?_
 
-_(i) Experiment with different combinations of predictors, includ- ing possible transformations and interactions, for each of the methods. Report the variables, method, and associated confu- sion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
+_(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
  
  ## Q 11 a-c,f
  
@@ -314,14 +395,14 @@ _(b) Explore the data graphically in order to investigate the association betwee
 
 
 ```r
-auto %>% select(-mpg, -name) %>%
+auto %>% dplyr::select(-mpg, -name) %>%
   gather(key="key", value="value", -mpg01) %>%
   ggplot(aes(x=as.factor(mpg01),y=value,color=as.factor(mpg01))) +
   geom_boxplot() +
   facet_wrap(~ key, scales = "free")
 ```
 
-![](Chapter_4_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](Chapter_4_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 
 _(c) Split the data into a training set and a test set._
@@ -346,15 +427,73 @@ auto.test <- auto[test.index==1,]
 
 _(d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
+
+```r
+mod11d <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  lda(mpg01 ~ . , data = .)
+mod11d
+```
+
+```
+## Call:
+## lda(mpg01 ~ ., data = .)
+## 
+## Prior probabilities of groups:
+##         0         1 
+## 0.5050505 0.4949495 
+## 
+## Group means:
+##   cylinders displacement horsepower   weight     year   origin
+## 0  6.746667     273.2267  129.58000 3626.520 74.39333 1.160000
+## 1  4.149660     113.6259   79.07483 2322.714 77.57143 2.013605
+## 
+## Coefficients of linear discriminants:
+##                       LD1
+## cylinders    -0.491278370
+## displacement -0.001471414
+## horsepower    0.015765991
+## weight       -0.001227812
+## year          0.129503798
+## origin        0.156495445
+```
+
+```r
+plot(mod11d)
+```
+
+![](Chapter_4_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+```r
+pred.11d <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11d, .)
+table(pred.11d$class, auto.test$mpg01)
+```
+
+```
+##    
+##      0  1
+##   0 38  5
+##   1  8 44
+```
+
+```r
+mean(pred.11d$class!=auto.test$mpg01)
+```
+
+```
+## [1] 0.1368421
+```
+
+
 _(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 _(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
 
 ```r
-mod11d <- auto.train %>% select(-acceleration, -mpg, -name) %>%
+mod11f <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
   glm(mpg01 ~ . , data = ., family = "binomial")
-summary(mod11d)
+summary(mod11f)
 ```
 
 ```
@@ -389,27 +528,29 @@ summary(mod11d)
 
 
 ```r
-mod11d.pred <- auto.test %>% select(-acceleration, -mpg, -name) %>%
-  predict(mod11d, ., type = "response")
-mod11d.pred <- ifelse(mod11d.pred>0.5,1,0)
-table(mod11d.pred,auto.test$mpg01)
+mod11f.pred <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11f, ., type = "response")
+mod11f.pred <- ifelse(mod11f.pred>0.5,1,0)
+table(mod11f.pred,auto.test$mpg01)
 ```
 
 ```
 ##            
-## mod11d.pred  0  1
+## mod11f.pred  0  1
 ##           0 40  7
 ##           1  6 42
 ```
 
 
 ```r
-(test.error <- sum(mod11d.pred != auto.test$mpg01)/length(mod11d.pred))
+mean(mod11f.pred!=auto.test$mpg01)
 ```
 
 ```
 ## [1] 0.1368421
 ```
+
+compared to LDA, same error rate, but lower sensitivity (worse false positive), better specificity (better false negative).
 
 _(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
  
