@@ -1,6 +1,11 @@
-# Chapter 4
-Julin N Maloof  
-1/21/2018  
+---
+title: "Chapter 4"
+author: "Julin N Maloof"
+date: "1/21/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 
 
@@ -59,44 +64,24 @@ _(a) Produce some numerical and graphical summaries of the Weekly data. Do there
 
 ```r
 library(ISLR)
-```
-
-```
-## Warning: package 'ISLR' was built under R version 3.4.2
-```
-
-```r
 library(tidyverse)
 ```
 
 ```
-## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr
+## ── Attaching packages ────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
-## Warning: package 'tidyr' was built under R version 3.4.2
+## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0
 ```
 
 ```
-## Warning: package 'purrr' was built under R version 3.4.2
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.4.2
-```
-
-```
-## Conflicts with tidy packages ----------------------------------------------
-```
-
-```
-## filter(): dplyr, stats
-## lag():    dplyr, stats
+## ── Conflicts ───────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
 ```
 
 ```r
@@ -260,13 +245,13 @@ _(d) Now fit the logistic regression model using a training data period from 199
 train <- weekly %>% filter(Year<2009)
 test <- weekly %>% filter(Year>=2009)
 mod10d <- glm(Direction ~ Lag2, data=train, family="binomial")
-mod10d.pred <- predict(mod10d,newdata = test, response="binomial")
+mod10d.pred <- predict(mod10d,newdata = test, type="response")
 mod10d.pred <- ifelse(mod10d.pred>.5,"Up","Down")
 mean(mod10d.pred!=test$Direction)
 ```
 
 ```
-## [1] 0.5576923
+## [1] 0.375
 ```
 
 ```r
@@ -276,11 +261,11 @@ table(mod10d.pred, test$Direction)
 ```
 ##            
 ## mod10d.pred Down Up
-##        Down   41 56
-##        Up      2  5
+##        Down    9  5
+##        Up     34 56
 ```
 
-OK so now it does really poorly!  56% error rate
+OK so now it does surprisingly well!  37.5% error rate
 
 _(e) Repeat (d) using LDA._
 
@@ -348,7 +333,7 @@ mean(pred.10e$class!=test$Direction)
 ```
 ## [1] 0.375
 ```
-Error rate drops to 37.5%.  False positive rate has dropped dramtically, but the False Negative rate has increased.
+Exactly the same as the logistic regression.
 
 _(f) Repeat (d) using QDA._
 

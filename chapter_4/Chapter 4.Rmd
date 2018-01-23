@@ -90,13 +90,13 @@ _(d) Now fit the logistic regression model using a training data period from 199
 train <- weekly %>% filter(Year<2009)
 test <- weekly %>% filter(Year>=2009)
 mod10d <- glm(Direction ~ Lag2, data=train, family="binomial")
-mod10d.pred <- predict(mod10d,newdata = test, response="binomial")
+mod10d.pred <- predict(mod10d,newdata = test, type="response")
 mod10d.pred <- ifelse(mod10d.pred>.5,"Up","Down")
 mean(mod10d.pred!=test$Direction)
 table(mod10d.pred, test$Direction)
 ```
 
-OK so now it does really poorly!  56% error rate
+OK so now it does surprisingly well!  37.5% error rate
 
 _(e) Repeat (d) using LDA._
 
@@ -109,7 +109,7 @@ pred.10e <- predict(mod10e,newdata = test)
 table(pred.10e$class,test$Direction)
 mean(pred.10e$class!=test$Direction)
 ```
-Error rate drops to 37.5%.  False positive rate has dropped dramtically, but the False Negative rate has increased.
+Exactly the same as the logistic regression.
 
 _(f) Repeat (d) using QDA._
 
