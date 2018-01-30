@@ -287,16 +287,16 @@ _(g) Perform KNN on the training data, with several values of K, in order to pre
 
 ```{r}
 set.seed(123)
-auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
-auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
-kmodels <- lapply(1:5, function(k) {
+auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01) %>% scale()
+auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01) %>% scale()
+kmodels <- lapply(1:10, function(k) {
   knn(auto.train.predictors, auto.test.predictors, auto.train$mpg01, k = k)
 }
 )
 ```
 
 ```{r}
-for(k in 1:5) {
+for(k in 1:10) {
   print(k)
   cat("error\n")
   print(mean(kmodels[[k]]!=auto.test$mpg01))
@@ -306,18 +306,18 @@ for(k in 1:5) {
 }
 ```
 
-k=3 is best...and better than the the other methods...
+k=1 is best...and better than the the other methods...
 
 ## Q13
 
 ```{r}
 data("Boston")
 
-boston <- as.tibble(Boston) %>% mutate(crime=as.factor(ifelse(crim > median(crim),"above","below"))) %>% dplyr::select(-crim)
+boston <- as.tibble(Boston) %>% mutate(crime=ifelse(crim > median(crim),1,0)) %>% dplyr::select(-crim)
 
 boston.long <- boston %>% gather(key = "index", value = "value", -crime)
 
-ggplot(boston.long,aes(x=crime,y=value)) +
+ggplot(boston.long,aes(x=as.factor(crime),y=value)) +
   geom_boxplot() +
   facet_wrap(~index, scales = "free")
 
@@ -338,17 +338,23 @@ summary(glm1)
  
 ```{r}
 glm1.pred <- predict(glm1, newdata = boston.test, type = "response")
-glm1.pred <- as.factor(ifelse(glm1.pred > 0.5, "above", "below"))
+glm1.pred <- ifelse(glm1.pred > 0.5, 1, 0)
 mean(glm1.pred != boston.test$crime)
 ```
  
-something wrong?
-
 
 ```{r}
 boston.small <- boston %>% dplyr::select(-indus,-chas,-rm,-lstat)
-glm2 <- glm(crime ~ . , data=boston.small, family = "binomial")
+boston.train.small <- boston.small %>% filter(train=="train")
+boston.test.small <- boston.small %>% filter(train=="test")
+glm2 <- glm(crime ~ . , data=boston.train.small, family = "binomial")
 summary(glm2)
 ```
  
- 
+```{r}
+glm2.pred <- predict(glm2, newdata = boston.test.small, type = "response")
+glm2.pred <- ifelse(glm2.pred > 0.5, 1, 0)
+mean(glm2.pred != boston.test.small$crime)
+```
+
+

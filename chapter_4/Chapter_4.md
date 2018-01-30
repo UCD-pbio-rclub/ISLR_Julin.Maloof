@@ -1,6 +1,11 @@
-# Chapter 4
-Julin N Maloof  
-1/21/2018  
+---
+title: "Chapter 4"
+author: "Julin N Maloof"
+date: "1/21/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 
 
@@ -115,44 +120,24 @@ _(a) Produce some numerical and graphical summaries of the Weekly data. Do there
 
 ```r
 library(ISLR)
-```
-
-```
-## Warning: package 'ISLR' was built under R version 3.4.2
-```
-
-```r
 library(tidyverse)
 ```
 
 ```
-## Loading tidyverse: ggplot2
-## Loading tidyverse: tibble
-## Loading tidyverse: tidyr
-## Loading tidyverse: readr
-## Loading tidyverse: purrr
-## Loading tidyverse: dplyr
+## ── Attaching packages ────────────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
-## Warning: package 'tidyr' was built under R version 3.4.2
+## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0
 ```
 
 ```
-## Warning: package 'purrr' was built under R version 3.4.2
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.4.2
-```
-
-```
-## Conflicts with tidy packages ----------------------------------------------
-```
-
-```
-## filter(): dplyr, stats
-## lag():    dplyr, stats
+## ── Conflicts ───────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()
 ```
 
 ```r
@@ -726,9 +711,9 @@ _(g) Perform KNN on the training data, with several values of K, in order to pre
 
 ```r
 set.seed(123)
-auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
-auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
-kmodels <- lapply(1:5, function(k) {
+auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01) %>% scale()
+auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01) %>% scale()
+kmodels <- lapply(1:10, function(k) {
   knn(auto.train.predictors, auto.test.predictors, auto.train$mpg01, k = k)
 }
 )
@@ -736,7 +721,7 @@ kmodels <- lapply(1:5, function(k) {
 
 
 ```r
-for(k in 1:5) {
+for(k in 1:10) {
   print(k)
   cat("error\n")
   print(mean(kmodels[[k]]!=auto.test$mpg01))
@@ -749,56 +734,106 @@ for(k in 1:5) {
 ```
 ## [1] 1
 ## error
-## [1] 0.1578947
+## [1] 0.06315789
 ## confusion
 ##    
 ##      0  1
-##   0 39  8
-##   1  7 41
+##   0 43  3
+##   1  3 46
 ## -------------------------------
 ## 
 ## [1] 2
 ## error
-## [1] 0.1473684
+## [1] 0.1157895
 ## confusion
 ##    
 ##      0  1
-##   0 38  6
-##   1  8 43
+##   0 41  6
+##   1  5 43
 ## -------------------------------
 ## 
 ## [1] 3
+## error
+## [1] 0.09473684
+## confusion
+##    
+##      0  1
+##   0 43  6
+##   1  3 43
+## -------------------------------
+## 
+## [1] 4
+## error
+## [1] 0.09473684
+## confusion
+##    
+##      0  1
+##   0 42  5
+##   1  4 44
+## -------------------------------
+## 
+## [1] 5
 ## error
 ## [1] 0.1052632
 ## confusion
 ##    
 ##      0  1
-##   0 42  6
-##   1  4 43
+##   0 43  7
+##   1  3 42
 ## -------------------------------
 ## 
-## [1] 4
-## error
-## [1] 0.1473684
-## confusion
-##    
-##      0  1
-##   0 38  6
-##   1  8 43
-## -------------------------------
-## 
-## [1] 5
+## [1] 6
 ## error
 ## [1] 0.1368421
 ## confusion
 ##    
 ##      0  1
-##   0 39  6
-##   1  7 43
+##   0 41  8
+##   1  5 41
+## -------------------------------
+## 
+## [1] 7
+## error
+## [1] 0.1263158
+## confusion
+##    
+##      0  1
+##   0 42  8
+##   1  4 41
+## -------------------------------
+## 
+## [1] 8
+## error
+## [1] 0.1473684
+## confusion
+##    
+##      0  1
+##   0 41  9
+##   1  5 40
+## -------------------------------
+## 
+## [1] 9
+## error
+## [1] 0.1368421
+## confusion
+##    
+##      0  1
+##   0 41  8
+##   1  5 41
+## -------------------------------
+## 
+## [1] 10
+## error
+## [1] 0.1368421
+## confusion
+##    
+##      0  1
+##   0 41  8
+##   1  5 41
 ## -------------------------------
 ```
 
-k=3 is best...and better than the the other methods...
+k=1 is best...and better than the the other methods...
 
 ## Q13
 
@@ -806,11 +841,11 @@ k=3 is best...and better than the the other methods...
 ```r
 data("Boston")
 
-boston <- as.tibble(Boston) %>% mutate(crime=as.factor(ifelse(crim > median(crim),"above","below"))) %>% dplyr::select(-crim)
+boston <- as.tibble(Boston) %>% mutate(crime=ifelse(crim > median(crim),1,0)) %>% dplyr::select(-crim)
 
 boston.long <- boston %>% gather(key = "index", value = "value", -crime)
 
-ggplot(boston.long,aes(x=crime,y=value)) +
+ggplot(boston.long,aes(x=as.factor(crime),y=value)) +
   geom_boxplot() +
   facet_wrap(~index, scales = "free")
 ```
@@ -839,24 +874,24 @@ summary(glm1)
 ## 
 ## Deviance Residuals: 
 ##      Min        1Q    Median        3Q       Max  
-## -2.45527  -0.00084  -0.00001   0.10315   2.02785  
+## -2.02785  -0.10315   0.00001   0.00084   2.45527  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)  39.655188   8.009508   4.951 7.38e-07 ***
-## zn            0.106377   0.043287   2.458  0.01399 *  
-## indus         0.052974   0.051754   1.024  0.30604    
-## chas         -1.219761   0.873057  -1.397  0.16238    
-## nox         -54.150890   9.559348  -5.665 1.47e-08 ***
-## rm            0.748484   0.847058   0.884  0.37690    
-## age          -0.026748   0.014814  -1.806  0.07099 .  
-## dis          -0.870718   0.280225  -3.107  0.00189 ** 
-## rad          -0.759204   0.192561  -3.943 8.06e-05 ***
-## tax           0.005447   0.003020   1.803  0.07134 .  
-## ptratio      -0.371850   0.150232  -2.475  0.01332 *  
-## black         0.010534   0.005751   1.832  0.06699 .  
-## lstat        -0.070729   0.058431  -1.210  0.22609    
-## medv         -0.225109   0.083886  -2.684  0.00729 ** 
+## (Intercept) -39.655188   8.009508  -4.951 7.38e-07 ***
+## zn           -0.106377   0.043287  -2.458  0.01399 *  
+## indus        -0.052974   0.051754  -1.024  0.30604    
+## chas          1.219761   0.873057   1.397  0.16238    
+## nox          54.150890   9.559348   5.665 1.47e-08 ***
+## rm           -0.748484   0.847058  -0.884  0.37690    
+## age           0.026748   0.014814   1.806  0.07099 .  
+## dis           0.870718   0.280225   3.107  0.00189 ** 
+## rad           0.759204   0.192561   3.943 8.06e-05 ***
+## tax          -0.005447   0.003020  -1.803  0.07134 .  
+## ptratio       0.371850   0.150232   2.475  0.01332 *  
+## black        -0.010534   0.005751  -1.832  0.06699 .  
+## lstat         0.070729   0.058431   1.210  0.22609    
+## medv          0.225109   0.083886   2.684  0.00729 ** 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
@@ -872,55 +907,66 @@ summary(glm1)
 
 ```r
 glm1.pred <- predict(glm1, newdata = boston.test, type = "response")
-glm1.pred <- as.factor(ifelse(glm1.pred > 0.5, "above", "below"))
+glm1.pred <- ifelse(glm1.pred > 0.5, 1, 0)
 mean(glm1.pred != boston.test$crime)
 ```
 
 ```
-## [1] 0.8991597
+## [1] 0.1008403
 ```
  
-something wrong?
-
 
 
 ```r
 boston.small <- boston %>% dplyr::select(-indus,-chas,-rm,-lstat)
-glm2 <- glm(crime ~ . , data=boston.small, family = "binomial")
+boston.train.small <- boston.small %>% filter(train=="train")
+boston.test.small <- boston.small %>% filter(train=="test")
+glm2 <- glm(crime ~ . , data=boston.train.small, family = "binomial")
 summary(glm2)
 ```
 
 ```
 ## 
 ## Call:
-## glm(formula = crime ~ ., family = "binomial", data = boston.small)
+## glm(formula = crime ~ ., family = "binomial", data = boston.train.small)
 ## 
 ## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -3.4087  -0.0022   0.0004   0.1840   2.4197  
+##      Min        1Q    Median        3Q       Max  
+## -2.08626  -0.14309   0.00001   0.00122   2.68681  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)  31.441272   6.048989   5.198 2.02e-07 ***
-## zn            0.082567   0.031424   2.628  0.00860 ** 
-## nox         -43.195824   6.452812  -6.694 2.17e-11 ***
-## age          -0.022851   0.009894  -2.310  0.02091 *  
-## dis          -0.634380   0.207634  -3.055  0.00225 ** 
-## rad          -0.718773   0.142066  -5.059 4.21e-07 ***
-## tax           0.007676   0.002503   3.066  0.00217 ** 
-## ptratio      -0.303502   0.109255  -2.778  0.00547 ** 
-## black         0.012866   0.006334   2.031  0.04224 *  
-## medv         -0.112882   0.034362  -3.285  0.00102 ** 
+## (Intercept) -34.570089   7.074276  -4.887 1.03e-06 ***
+## zn           -0.106730   0.039457  -2.705  0.00683 ** 
+## nox          46.264379   7.989808   5.790 7.02e-09 ***
+## age           0.026060   0.012235   2.130  0.03317 *  
+## dis           0.751407   0.257999   2.912  0.00359 ** 
+## rad           0.773922   0.172772   4.479 7.48e-06 ***
+## tax          -0.006669   0.002846  -2.344  0.01910 *  
+## ptratio       0.256411   0.127106   2.017  0.04366 *  
+## black        -0.010388   0.005917  -1.756  0.07915 .  
+## medv          0.127463   0.040861   3.119  0.00181 ** 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 701.46  on 505  degrees of freedom
-## Residual deviance: 216.22  on 496  degrees of freedom
-## AIC: 236.22
+##     Null deviance: 536.18  on 386  degrees of freedom
+## Residual deviance: 154.42  on 377  degrees of freedom
+## AIC: 174.42
 ## 
 ## Number of Fisher Scoring iterations: 9
 ```
  
- 
+
+```r
+glm2.pred <- predict(glm2, newdata = boston.test.small, type = "response")
+glm2.pred <- ifelse(glm2.pred > 0.5, 1, 0)
+mean(glm2.pred != boston.test.small$crime)
+```
+
+```
+## [1] 0.1176471
+```
+
+
