@@ -803,4 +803,124 @@ k=3 is best...and better than the the other methods...
 ## Q13
 
 
+```r
+data("Boston")
+
+boston <- as.tibble(Boston) %>% mutate(crime=as.factor(ifelse(crim > median(crim),"above","below"))) %>% dplyr::select(-crim)
+
+boston.long <- boston %>% gather(key = "index", value = "value", -crime)
+
+ggplot(boston.long,aes(x=crime,y=value)) +
+  geom_boxplot() +
+  facet_wrap(~index, scales = "free")
+```
+
+![](Chapter_4_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+
+
+```r
+set.seed(123)
+train <- sample(c("train","test"),size = nrow(boston), replace = TRUE, prob = c(.75,.25))
+boston.train <- boston %>% filter(train=="train")
+boston.test <- boston %>% filter(train=="test")
+```
+
+
+
+```r
+glm1 <- glm(crime ~ ., data = boston.train, family = "binomial")
+summary(glm1)
+```
+
+```
+## 
+## Call:
+## glm(formula = crime ~ ., family = "binomial", data = boston.train)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.45527  -0.00084  -0.00001   0.10315   2.02785  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  39.655188   8.009508   4.951 7.38e-07 ***
+## zn            0.106377   0.043287   2.458  0.01399 *  
+## indus         0.052974   0.051754   1.024  0.30604    
+## chas         -1.219761   0.873057  -1.397  0.16238    
+## nox         -54.150890   9.559348  -5.665 1.47e-08 ***
+## rm            0.748484   0.847058   0.884  0.37690    
+## age          -0.026748   0.014814  -1.806  0.07099 .  
+## dis          -0.870718   0.280225  -3.107  0.00189 ** 
+## rad          -0.759204   0.192561  -3.943 8.06e-05 ***
+## tax           0.005447   0.003020   1.803  0.07134 .  
+## ptratio      -0.371850   0.150232  -2.475  0.01332 *  
+## black         0.010534   0.005751   1.832  0.06699 .  
+## lstat        -0.070729   0.058431  -1.210  0.22609    
+## medv         -0.225109   0.083886  -2.684  0.00729 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 536.18  on 386  degrees of freedom
+## Residual deviance: 147.77  on 373  degrees of freedom
+## AIC: 175.77
+## 
+## Number of Fisher Scoring iterations: 9
+```
+ 
+
+```r
+glm1.pred <- predict(glm1, newdata = boston.test, type = "response")
+glm1.pred <- as.factor(ifelse(glm1.pred > 0.5, "above", "below"))
+mean(glm1.pred != boston.test$crime)
+```
+
+```
+## [1] 0.8991597
+```
+ 
+something wrong?
+
+
+
+```r
+boston.small <- boston %>% dplyr::select(-indus,-chas,-rm,-lstat)
+glm2 <- glm(crime ~ . , data=boston.small, family = "binomial")
+summary(glm2)
+```
+
+```
+## 
+## Call:
+## glm(formula = crime ~ ., family = "binomial", data = boston.small)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.4087  -0.0022   0.0004   0.1840   2.4197  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  31.441272   6.048989   5.198 2.02e-07 ***
+## zn            0.082567   0.031424   2.628  0.00860 ** 
+## nox         -43.195824   6.452812  -6.694 2.17e-11 ***
+## age          -0.022851   0.009894  -2.310  0.02091 *  
+## dis          -0.634380   0.207634  -3.055  0.00225 ** 
+## rad          -0.718773   0.142066  -5.059 4.21e-07 ***
+## tax           0.007676   0.002503   3.066  0.00217 ** 
+## ptratio      -0.303502   0.109255  -2.778  0.00547 ** 
+## black         0.012866   0.006334   2.031  0.04224 *  
+## medv         -0.112882   0.034362  -3.285  0.00102 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 701.46  on 505  degrees of freedom
+## Residual deviance: 216.22  on 496  degrees of freedom
+## AIC: 236.22
+## 
+## Number of Fisher Scoring iterations: 9
+```
+ 
  

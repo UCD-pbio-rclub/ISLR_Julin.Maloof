@@ -310,5 +310,45 @@ k=3 is best...and better than the the other methods...
 
 ## Q13
 
+```{r}
+data("Boston")
 
+boston <- as.tibble(Boston) %>% mutate(crime=as.factor(ifelse(crim > median(crim),"above","below"))) %>% dplyr::select(-crim)
+
+boston.long <- boston %>% gather(key = "index", value = "value", -crime)
+
+ggplot(boston.long,aes(x=crime,y=value)) +
+  geom_boxplot() +
+  facet_wrap(~index, scales = "free")
+
+```
+
+```{r}
+set.seed(123)
+train <- sample(c("train","test"),size = nrow(boston), replace = TRUE, prob = c(.75,.25))
+boston.train <- boston %>% filter(train=="train")
+boston.test <- boston %>% filter(train=="test")
+```
+
+
+```{r}
+glm1 <- glm(crime ~ ., data = boston.train, family = "binomial")
+summary(glm1)
+```
+ 
+```{r}
+glm1.pred <- predict(glm1, newdata = boston.test, type = "response")
+glm1.pred <- as.factor(ifelse(glm1.pred > 0.5, "above", "below"))
+mean(glm1.pred != boston.test$crime)
+```
+ 
+something wrong?
+
+
+```{r}
+boston.small <- boston %>% dplyr::select(-indus,-chas,-rm,-lstat)
+glm2 <- glm(crime ~ . , data=boston.small, family = "binomial")
+summary(glm2)
+```
+ 
  
