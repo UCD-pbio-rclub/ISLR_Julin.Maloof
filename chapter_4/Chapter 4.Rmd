@@ -11,8 +11,28 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Q5
 
- ## Q6
+_We now examine the differences between LDA and QDA._
+
+_(a) If the Bayes decision boundary is linear, do we expect LDA or QDA to perform better on the training set? On the test set?_
+
+QDA may perform better on the training set because it is more flexible, but LDA will perform better on the test set.
+
+_(b) If the Bayes decision boundary is non-linear, do we expect LDA or QDA to perform better on the training set? On the test set?_
+
+QDA will perform beter on both test and train.
+
+_(c) In general, as the sample size n increases, do we expect the test prediction accuracy of QDA relative to LDA to improve, decline, or be unchanged? Why?_
+
+Improve.  QDA is much more highly paramterized.  With small training sets it is hard to accurately estimate those parameters but this will improve with sample size.
+
+_(d) True or False: Even if the Bayes decision boundary for a given problem is linear, we will probably achieve a superior test error rate using QDA rather than LDA because QDA is flexible enough to model a linear decision boundary. Justify your answer._
+
+False.  Because QDA is flexible it is more prone to variance from training set to training set.
+
+
+## Q6
  
 _Suppose we collect data for a group of students in a statistics class with variables X1 = hours studied, X2 = undergrad GPA, and Y = receive an A. We fit a logistic regression and produce estimated coefficient, βˆ0 = −6, βˆ1 = 0.05, βˆ2 = 1_
 
@@ -41,8 +61,39 @@ hours
 
 50 hours
 
+## Q8
+_Suppose that we take a data set, divide it into equally-sized training and test sets, and then try out two different classification procedures. First we use logistic regression and get an error rate of 20 % on the training data and 30 % on the test data. Next we use 1-nearest neighbors (i.e. K = 1) and get an average error rate (averaged over both test and training data sets) of 18%. Based on these results, which method should we prefer to use for classification of new observations? Why?_
+
+Logistic regression.  The training error on KNN K=1 should be 0, implying that the test error is 36%.
+
+## Q9
+_This problem has to do with odds._
+
+_(a) On average, what fraction of people with an odds of 0.37 of defaulting on their credit card payment will in fact default?_
+
+$$
+\begin{align}
+\frac{Pr(x)}{1 - Pr(x)} &= 0.37 \\
+
+Pr(x) &= 0.37 - .37*Pr(x) \\
+
+1.37*Pr(x) &= 0.37\\
+
+Pr(x) &= 0.37 / 1.37\\
+
+Pr(x) &= 0.27
+\end{align}
+$$
+
+
+_(b) Suppose that an individual has a 16% chance of defaulting on her credit card payment. What are the odds that she will default?_
+
+```{r}
+.16 / (1-.16)
+```
+
  
- ## Q 10 a-d
+## Q 10 a-d
  
  _10. This question should be answered using the Weekly data set, which is part of the ISLR package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010._
  
@@ -113,13 +164,36 @@ Exactly the same as the logistic regression.
 
 _(f) Repeat (d) using QDA._
 
+```{r}
+mod10f <- qda(Direction ~ Lag2, data=train)
+mod10f
+pred.10f <- predict(mod10f,newdata = test)
+table(pred.10f$class,test$Direction)
+mean(pred.10f$class!=test$Direction)
+```
+
+Is something wrong here??
+
+Higher error rate and terrible specificity.  
+
 _(g) Repeat (d) using KNN with K = 1._
+
+```{r}
+library(class)
+set.seed(123)
+knn10g <- knn(train[,"Lag2"],test[,"Lag2"],train$Direction, k = 1)
+table(knn10g,test$Direction)
+mean(knn10g!=test$Direction)
+```
+
 
 _(h) Which of these methods appears to provide the best results on this data?_
 
+Logistic regression and LDA have the lowest test error, followed by QDA and then knn.
+
 _(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
  
- ## Q 11 a-c,f
+ ## Q 11 
  
 _(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables._
 
@@ -166,6 +240,7 @@ mod11d <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
 mod11d
 plot(mod11d)
 ```
+
 ```{r}
 pred.11d <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
   predict(mod11d, .)
@@ -175,6 +250,16 @@ mean(pred.11d$class!=auto.test$mpg01)
 
 
 _(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+```{r}
+mod11e <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  qda(mpg01 ~ . , data = .)
+mod11e
+pred.11e <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11e, .)
+table(pred.11e$class, auto.test$mpg01)
+mean(pred.11e$class!=auto.test$mpg01)
+```
 
 _(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
@@ -199,4 +284,31 @@ mean(mod11f.pred!=auto.test$mpg01)
 compared to LDA, same error rate, but lower sensitivity (worse false positive), better specificity (better false negative).
 
 _(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
+
+```{r}
+set.seed(123)
+auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
+auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
+kmodels <- lapply(1:5, function(k) {
+  knn(auto.train.predictors, auto.test.predictors, auto.train$mpg01, k = k)
+}
+)
+```
+
+```{r}
+for(k in 1:5) {
+  print(k)
+  cat("error\n")
+  print(mean(kmodels[[k]]!=auto.test$mpg01))
+  cat("confusion\n")
+  print(table(kmodels[[k]],auto.test$mpg01))
+  cat("-------------------------------\n\n")
+}
+```
+
+k=3 is best...and better than the the other methods...
+
+## Q13
+
+
  

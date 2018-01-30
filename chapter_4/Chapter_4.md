@@ -1,16 +1,31 @@
----
-title: "Chapter 4"
-author: "Julin N Maloof"
-date: "1/21/2018"
-output: 
-  html_document: 
-    keep_md: yes
----
+# Chapter 4
+Julin N Maloof  
+1/21/2018  
 
 
 
+## Q5
 
- ## Q6
+_We now examine the differences between LDA and QDA._
+
+_(a) If the Bayes decision boundary is linear, do we expect LDA or QDA to perform better on the training set? On the test set?_
+
+QDA may perform better on the training set because it is more flexible, but LDA will perform better on the test set.
+
+_(b) If the Bayes decision boundary is non-linear, do we expect LDA or QDA to perform better on the training set? On the test set?_
+
+QDA will perform beter on both test and train.
+
+_(c) In general, as the sample size n increases, do we expect the test prediction accuracy of QDA relative to LDA to improve, decline, or be unchanged? Why?_
+
+Improve.  QDA is much more highly paramterized.  With small training sets it is hard to accurately estimate those parameters but this will improve with sample size.
+
+_(d) True or False: Even if the Bayes decision boundary for a given problem is linear, we will probably achieve a superior test error rate using QDA rather than LDA because QDA is flexible enough to model a linear decision boundary. Justify your answer._
+
+False.  Because QDA is flexible it is more prone to variance from training set to training set.
+
+
+## Q6
  
 _Suppose we collect data for a group of students in a statistics class with variables X1 = hours studied, X2 = undergrad GPA, and Y = receive an A. We fit a logistic regression and produce estimated coefficient, βˆ0 = −6, βˆ1 = 0.05, βˆ2 = 1_
 
@@ -54,8 +69,44 @@ hours
 
 50 hours
 
+## Q8
+_Suppose that we take a data set, divide it into equally-sized training and test sets, and then try out two different classification procedures. First we use logistic regression and get an error rate of 20 % on the training data and 30 % on the test data. Next we use 1-nearest neighbors (i.e. K = 1) and get an average error rate (averaged over both test and training data sets) of 18%. Based on these results, which method should we prefer to use for classification of new observations? Why?_
+
+Logistic regression.  The training error on KNN K=1 should be 0, implying that the test error is 36%.
+
+## Q9
+_This problem has to do with odds._
+
+_(a) On average, what fraction of people with an odds of 0.37 of defaulting on their credit card payment will in fact default?_
+
+$$
+\begin{align}
+\frac{Pr(x)}{1 - Pr(x)} &= 0.37 \\
+
+Pr(x) &= 0.37 - .37*Pr(x) \\
+
+1.37*Pr(x) &= 0.37\\
+
+Pr(x) &= 0.37 / 1.37\\
+
+Pr(x) &= 0.27
+\end{align}
+$$
+
+
+_(b) Suppose that an individual has a 16% chance of defaulting on her credit card payment. What are the odds that she will default?_
+
+
+```r
+.16 / (1-.16)
+```
+
+```
+## [1] 0.1904762
+```
+
  
- ## Q 10 a-d
+## Q 10 a-d
  
  _10. This question should be answered using the Weekly data set, which is part of the ISLR package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010._
  
@@ -64,24 +115,44 @@ _(a) Produce some numerical and graphical summaries of the Weekly data. Do there
 
 ```r
 library(ISLR)
+```
+
+```
+## Warning: package 'ISLR' was built under R version 3.4.2
+```
+
+```r
 library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ────────────────────────── tidyverse 1.2.1 ──
+## Loading tidyverse: ggplot2
+## Loading tidyverse: tibble
+## Loading tidyverse: tidyr
+## Loading tidyverse: readr
+## Loading tidyverse: purrr
+## Loading tidyverse: dplyr
 ```
 
 ```
-## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
-## ✔ tidyr   0.7.2     ✔ stringr 1.2.0
-## ✔ readr   1.1.1     ✔ forcats 0.2.0
+## Warning: package 'tidyr' was built under R version 3.4.2
 ```
 
 ```
-## ── Conflicts ───────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()
+## Warning: package 'purrr' was built under R version 3.4.2
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.4.2
+```
+
+```
+## Conflicts with tidy packages ----------------------------------------------
+```
+
+```
+## filter(): dplyr, stats
+## lag():    dplyr, stats
 ```
 
 ```r
@@ -140,7 +211,7 @@ summary(weekly)
 pairs(weekly)
 ```
 
-![](Chapter_4_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](Chapter_4_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ```r
 weekly %>% mutate(Direction = as.numeric(Direction)) %>% cor() %>% round(2)
@@ -312,7 +383,7 @@ mod10e
 plot(mod10e)
 ```
 
-![](Chapter_4_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](Chapter_4_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ```r
 pred.10e <- predict(mod10e,newdata = test)
@@ -337,13 +408,83 @@ Exactly the same as the logistic regression.
 
 _(f) Repeat (d) using QDA._
 
+
+```r
+mod10f <- qda(Direction ~ Lag2, data=train)
+mod10f
+```
+
+```
+## Call:
+## qda(Direction ~ Lag2, data = train)
+## 
+## Prior probabilities of groups:
+##      Down        Up 
+## 0.4477157 0.5522843 
+## 
+## Group means:
+##             Lag2
+## Down -0.03568254
+## Up    0.26036581
+```
+
+```r
+pred.10f <- predict(mod10f,newdata = test)
+table(pred.10f$class,test$Direction)
+```
+
+```
+##       
+##        Down Up
+##   Down    0  0
+##   Up     43 61
+```
+
+```r
+mean(pred.10f$class!=test$Direction)
+```
+
+```
+## [1] 0.4134615
+```
+
+Is something wrong here??
+
+Higher error rate and terrible specificity.  
+
 _(g) Repeat (d) using KNN with K = 1._
+
+
+```r
+library(class)
+set.seed(123)
+knn10g <- knn(train[,"Lag2"],test[,"Lag2"],train$Direction, k = 1)
+table(knn10g,test$Direction)
+```
+
+```
+##       
+## knn10g Down Up
+##   Down   21 29
+##   Up     22 32
+```
+
+```r
+mean(knn10g!=test$Direction)
+```
+
+```
+## [1] 0.4903846
+```
+
 
 _(h) Which of these methods appears to provide the best results on this data?_
 
+Logistic regression and LDA have the lowest test error, followed by QDA and then knn.
+
 _(i) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier._
  
- ## Q 11 a-c,f
+ ## Q 11 
  
 _(a) Create a binary variable, mpg01, that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables._
 
@@ -387,7 +528,7 @@ auto %>% dplyr::select(-mpg, -name) %>%
   facet_wrap(~ key, scales = "free")
 ```
 
-![](Chapter_4_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](Chapter_4_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
 
 
 _(c) Split the data into a training set and a test set._
@@ -446,7 +587,8 @@ mod11d
 plot(mod11d)
 ```
 
-![](Chapter_4_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+![](Chapter_4_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+
 
 ```r
 pred.11d <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
@@ -471,6 +613,48 @@ mean(pred.11d$class!=auto.test$mpg01)
 
 
 _(e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
+
+
+```r
+mod11e <- auto.train %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  qda(mpg01 ~ . , data = .)
+mod11e
+```
+
+```
+## Call:
+## qda(mpg01 ~ ., data = .)
+## 
+## Prior probabilities of groups:
+##         0         1 
+## 0.5050505 0.4949495 
+## 
+## Group means:
+##   cylinders displacement horsepower   weight     year   origin
+## 0  6.746667     273.2267  129.58000 3626.520 74.39333 1.160000
+## 1  4.149660     113.6259   79.07483 2322.714 77.57143 2.013605
+```
+
+```r
+pred.11e <- auto.test %>% dplyr::select(-acceleration, -mpg, -name) %>%
+  predict(mod11e, .)
+table(pred.11e$class, auto.test$mpg01)
+```
+
+```
+##    
+##      0  1
+##   0 41  7
+##   1  5 42
+```
+
+```r
+mean(pred.11e$class!=auto.test$mpg01)
+```
+
+```
+## [1] 0.1263158
+```
 
 _(f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?_
 
@@ -538,4 +722,85 @@ mean(mod11f.pred!=auto.test$mpg01)
 compared to LDA, same error rate, but lower sensitivity (worse false positive), better specificity (better false negative).
 
 _(g) Perform KNN on the training data, with several values of K, in order to predict mpg01. Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?_
+
+
+```r
+set.seed(123)
+auto.train.predictors <- auto.train %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
+auto.test.predictors <-  auto.test %>% dplyr::select(-acceleration, -mpg, -name, -mpg01)
+kmodels <- lapply(1:5, function(k) {
+  knn(auto.train.predictors, auto.test.predictors, auto.train$mpg01, k = k)
+}
+)
+```
+
+
+```r
+for(k in 1:5) {
+  print(k)
+  cat("error\n")
+  print(mean(kmodels[[k]]!=auto.test$mpg01))
+  cat("confusion\n")
+  print(table(kmodels[[k]],auto.test$mpg01))
+  cat("-------------------------------\n\n")
+}
+```
+
+```
+## [1] 1
+## error
+## [1] 0.1578947
+## confusion
+##    
+##      0  1
+##   0 39  8
+##   1  7 41
+## -------------------------------
+## 
+## [1] 2
+## error
+## [1] 0.1473684
+## confusion
+##    
+##      0  1
+##   0 38  6
+##   1  8 43
+## -------------------------------
+## 
+## [1] 3
+## error
+## [1] 0.1052632
+## confusion
+##    
+##      0  1
+##   0 42  6
+##   1  4 43
+## -------------------------------
+## 
+## [1] 4
+## error
+## [1] 0.1473684
+## confusion
+##    
+##      0  1
+##   0 38  6
+##   1  8 43
+## -------------------------------
+## 
+## [1] 5
+## error
+## [1] 0.1368421
+## confusion
+##    
+##      0  1
+##   0 39  6
+##   1  7 43
+## -------------------------------
+```
+
+k=3 is best...and better than the the other methods...
+
+## Q13
+
+
  
