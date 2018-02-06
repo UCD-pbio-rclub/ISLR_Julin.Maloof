@@ -123,8 +123,59 @@ validation.errors5d
 t.test(validation.errors5c, validation.errors5d)
 ```
 
-No significant difference
+No significant difference (Although if I run it with 100 splits then it is just barely significant with the 5d model being worse)
 
 ### Q7
+
+_In Sections 5.3.2 and 5.3.3, we saw that the cv.glm() function can be used in order to compute the LOOCV test error estimate. Alterna- tively, one could compute those quantities using just the glm() and predict.glm() functions, and a for loop. You will now take this ap- proach in order to compute the LOOCV error for a simple logistic regression model on the Weekly data set. Recall that in the context of classification problems, the LOOCV error is given in (5.4)._
+_(a) Fit a logistic regression model that predicts Direction using Lag1 and Lag2._
+
+```{r}
+data("Weekly")
+head(Weekly)
+glm7a <- glm(Direction ~ Lag1 + Lag2, data=Weekly, family=binomial)
+summary(glm7a)
+```
+
+_(b) Fit a logistic regression model that predicts Direction using Lag1 and Lag2 using all but the first observation._
+
+```{r}
+glm7b <- glm(Direction ~ Lag1 + Lag2, data=Weekly[-1,], family=binomial)
+summary(glm7b)
+```
+
+_(c) Use the model from (b) to predict the direction of the first observation. You can do this by predicting that the first observation will go up if P(Direction="Up"|Lag1, Lag2) > 0.5. Was this observation correctly classified?_
+
+```{r}
+predict(glm7b, newdata=Weekly[1,],type="response")
+Weekly[1,]$Direction
+```
+
+No, incorrectly predicted
+
+_(d) Writeaforloopfromi=1toi=n,wherenisthenumberof observations in the data set, that performs each of the following steps:
+i. Fit a logistic regression model using all but the ith obser- vation to predict Direction using Lag1 and Lag2.
+ii. Compute the posterior probability of the market moving up for the ith observation.
+iii. Use the posterior probability for the ith observation in order to predict whether or not the market moves up.
+iv. Determine whether or not an error was made in predicting the direction for the ith observation. If an error was made, then indicate this as a 1, and otherwise indicate it as a 0.
+
+```{r}
+loocv.errors <- sapply(1:nrow(Weekly), function(i) {
+  glm7d <- glm(Direction ~ Lag1 + Lag2, data=Weekly[-i,], family=binomial)
+  prediction.7d <- predict(glm7d, newdata=Weekly[i,],type="response")
+  prediction.7d <- ifelse(prediction.7d==0,"Down","Up")
+  as.numeric(prediction.7d != Weekly[i,]$Direction)
+}
+)
+```
+
+
+(e) Take the average of the n numbers obtained in (d)iv in order to obtain the LOOCV estimate for the test error. Comment on the results.
+
+```{r}
+mean(loocv.errors)
+```
+
+The error rate is 44%, so not much better than random.
 
 ### Q8
