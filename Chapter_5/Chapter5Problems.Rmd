@@ -2,7 +2,9 @@
 title: "Chapter 5"
 author: "Julin N Maloof"
 date: "2/5/2018"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -53,16 +55,14 @@ _(b) Using the validation set approach, estimate the test error of this model. I
 _i. Split the sample set into a training set and a validation set._
 
 ```{r}
-train_test <- sample(c("train","validate"),size = nrow(Default), replace = TRUE)
-default.train <- Default[train_test=="train",]
-default.validate <- Default[train_test=="validate",]
+train <- sample(nrow(Default),size = ceiling(nrow(Default)/2))
 ```
 
      
 _ii. Fit a multiple logistic regression model using only the training observations._
 
 ```{r}
-glm5b <- update(glm5a,data=default.train)
+glm5b <- update(glm5a,subset=train)
 summary(glm5b)
 ```
 
@@ -71,15 +71,15 @@ _iii. Obtain a prediction of default status for each individual in the validatio
 ```{r}
 summary(Default$default)
 
-glm5b.predict <- predict(glm5b,newdata = default.validate, type="response")
+glm5b.predict <- predict(glm5b, newdata=Default[-train,],type="response")
 glm5b.predict <- ifelse(glm5b.predict<.5,"No","Yes")
 ```
 
 _iv. Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified._
 
 ```{r}
-table(glm5b.predict,obs=default.validate$default)
-(validation.error <- mean(glm5b.predict!=default.validate$default))
+table(glm5b.predict,obs=Default$default[-train])
+(validation.error <- mean(glm5b.predict!=Default$default[-train]))
 ```
 
 _(c) Repeat the process in (b) three times, using three different splits of the observations into a training set and a validation set. Comment on the results obtained._
@@ -153,7 +153,7 @@ Weekly[1,]$Direction
 
 No, incorrectly predicted
 
-_(d) Writeaforloopfromi=1toi=n,wherenisthenumberof observations in the data set, that performs each of the following steps:
+_(d) Write a for loop from i=1 to i=n, where n is the number of observations in the data set, that performs each of the following steps:
 i. Fit a logistic regression model using all but the ith obser- vation to predict Direction using Lag1 and Lag2.
 ii. Compute the posterior probability of the market moving up for the ith observation.
 iii. Use the posterior probability for the ith observation in order to predict whether or not the market moves up.
@@ -179,3 +179,81 @@ mean(loocv.errors)
 The error rate is 44%, so not much better than random.
 
 ### Q8
+
+_We will now perform cross-validation on a simulated data set._
+_(a) Generate a simulated data set as follows:_
+
+```{r}
+set.seed(1)
+x=rnorm(100)
+y=x-2*x^2+rnorm(100)
+```
+
+_In this data set, what is n and what is p? Write out the model used to generate the data in equation form._
+
+n = 100, p = 1? 2?
+
+_(b) Create a scatterplot of X against Y . Comment on what you find._
+
+```{r}
+qplot(x,y)
+```
+
+relationship is non-linear
+
+_(c) Set a random seed, and then compute the LOOCV errors that result from fitting the following four models using least squares:_
+         
+i. Y = β0 + β1X + ε
+ii. Y = β0 + β1X + β2X2 + ε
+iii. Y = β0 +β1X +β2X2 +β3X3 +ε
+iv. Y = β0 +β1X +β2X2 +β3X3 +β4X4 +ε.
+Note you may find it helpful to use the data.frame() function
+to create a single data set containing both X and Y .
+
+```{r}
+data.8c <- tibble(x=x,y=y)
+data.8c
+```
+
+```{r}
+library(boot)
+set.seed(123)
+sapply(1:4, function(i) {
+  glm.tmp <- glm(y~poly(x,i),data=data.8c)
+  cv.glm(data.8c,glm.tmp)$delta
+}
+)
+```
+
+
+_(d) Repeat (c) using another random seed, and report your results._
+
+```{r}
+set.seed(456)
+sapply(1:4, function(i) {
+  glm.tmp <- glm(y~poly(x,i),data=data.8c)
+  cv.glm(data.8c,glm.tmp)$delta
+}
+)
+```
+
+
+_Are your results the same as what you got in (c)? Why?_
+
+Results are the same.  With LOOCV I don't see that there is any random selection.
+
+_(e) Which of the models in (c) had the smallest LOOCV error? Is this what you expected? Explain your answer._
+
+The quadratic model has the smallest LOOCV.  This is as expected since a quadratic model was used to generate the data.
+
+_(f) Comment on the statistical significance of the coefficient estimates that results from fitting each of the models in (c) using least squares. Do these results agree with the conclusions drawn based on the cross-validation results?_
+
+```{r}
+glm.results <- lapply(1:4, function(i) {
+  glm(y~poly(x,i),data=data.8c)
+}
+)
+for(i in glm.results) print(summary(i))
+```
+
+Yes, these results are consistent; the first two terms are significant.
