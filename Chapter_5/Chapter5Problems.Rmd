@@ -1,0 +1,130 @@
+---
+title: "Chapter 5"
+author: "Julin N Maloof"
+date: "2/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Chapter 5
+
+### Q3
+
+
+_3. We now review k-fold cross-validation._
+
+_(a) Explain how k-fold cross-validation is implemented._
+
+Split the samples into K groups.  Designate one group as the validation group.  Train on the other groups and predict on the validation group.  Circle around such that each group has its turn as being the validation group once.
+
+_(b) What are the advantages and disadvantages of k-fold cross-validation relative to:_
+_i. The validation set approach?_
+K-fold advantave: using more of the samples, so the training set is closer to all of the data that you have.  Can't think of a disadvantage
+
+ii. LOOCV?_
+
+K-fold disadvantage: slower.  Advantage: less bias.
+
+### Q5
+
+_In Chapter 4, we used logistic regression to predict the probability of default using income and balance on the Default data set. We will now estimate the test error of this logistic regression model using the validation set approach. Do not forget to set a random seed before beginning your analysis._
+
+_(a) Fit a logistic regression model that uses income and balance to predict default._
+
+```{r}
+library(ISLR)
+library(MASS)
+library(tidyverse)
+data(Default)
+head(Default)
+set.seed(123)
+```
+
+```{r}
+glm5a <- glm(default ~ balance + income, family=binomial, data=Default)
+summary(glm5a)
+```
+
+
+_(b) Using the validation set approach, estimate the test error of this model. In order to do this, you must perform the following steps:_
+_i. Split the sample set into a training set and a validation set._
+
+```{r}
+train_test <- sample(c("train","validate"),size = nrow(Default), replace = TRUE)
+default.train <- Default[train_test=="train",]
+default.validate <- Default[train_test=="validate",]
+```
+
+     
+_ii. Fit a multiple logistic regression model using only the training observations._
+
+```{r}
+glm5b <- update(glm5a,data=default.train)
+summary(glm5b)
+```
+
+_iii. Obtain a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual, and classifying the individual to the default category if the posterior probability is greater than 0.5._
+
+```{r}
+summary(Default$default)
+
+glm5b.predict <- predict(glm5b,newdata = default.validate, type="response")
+glm5b.predict <- ifelse(glm5b.predict<.5,"No","Yes")
+```
+
+_iv. Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified._
+
+```{r}
+table(glm5b.predict,obs=default.validate$default)
+(validation.error <- mean(glm5b.predict!=default.validate$default))
+```
+
+_(c) Repeat the process in (b) three times, using three different splits of the observations into a training set and a validation set. Comment on the results obtained._
+
+```{r}
+validation.errors5c <- sapply(1:10, function(x) {
+  train_test <- sample(c("train","validate"),size = nrow(Default), replace = TRUE)
+  default.train <- Default[train_test=="train",]
+  default.validate <- Default[train_test=="validate",]
+  glm5c <- glm(default ~ balance + income,data=default.train,family=binomial)
+  glm5c.predict <- predict(glm5c,newdata = default.validate, type="response")
+  glm5c.predict <- ifelse(glm5c.predict<.5,"No","Yes")
+  mean(glm5c.predict!=default.validate$default)
+}
+)
+
+validation.errors5c
+```
+
+The results are pretty consistent across splits
+
+_(d) Now consider a logistic regression model that predicts the probability of default using income, balance, and a dummy variable for student. Estimate the test error for this model using the validation set approach. Comment on whether or not including a dummy variable for student leads to a reduction in the test error rate._
+
+```{r}
+Default$student01 <- as.numeric(Default$student)
+validation.errors5d <- sapply(1:10, function(x) {
+  train_test <- sample(c("train","validate"),size = nrow(Default), replace = TRUE)
+  default.train <- Default[train_test=="train",]
+  default.validate <- Default[train_test=="validate",]
+  glm5d <- glm(default ~ balance + income + student01,data=default.train,family=binomial)
+  glm5d.predict <- predict(glm5d,newdata = default.validate, type="response")
+  glm5d.predict <- ifelse(glm5d.predict<.5,"No","Yes")
+  mean(glm5d.predict!=default.validate$default)
+}
+)
+
+validation.errors5d
+```
+
+```{r}
+t.test(validation.errors5c, validation.errors5d)
+```
+
+No significant difference
+
+### Q7
+
+### Q8
