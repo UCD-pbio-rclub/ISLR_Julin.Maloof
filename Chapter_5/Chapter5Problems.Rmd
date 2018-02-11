@@ -30,6 +30,14 @@ ii. LOOCV?_
 
 K-fold disadvantage: slower.  Advantage: less bias.
 
+### Q4
+
+_Suppose that we use some statistical learning method to make a prediction for the response Y for a particular value of the predictor X. Carefully describe how we might estimate the standard deviation of our prediction._
+
+As I understand the question, this does not involving creating testing and training samples, so the bootstrap should work.
+
+Take a sample, the same size as n, from our original data, but with replacement.  Make the prediction.  Take another sample, etc, for maybe 1000 times.  Then calculate the SD of the predictions.
+
 ### Q5
 
 _In Chapter 4, we used logistic regression to predict the probability of default using income and balance on the Default data set. We will now estimate the test error of this logistic regression model using the validation set approach. Do not forget to set a random seed before beginning your analysis._
