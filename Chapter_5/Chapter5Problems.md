@@ -6,6 +6,86 @@ Julin N Maloof
 
 ## Chapter 5
 
+### Q2
+
+_We will now derive the probability that a given observation is part of a bootstrap sample. Suppose that we obtain a bootstrap sample from a set of n observations._
+_(a) What is the probability that the first bootstrap observation is not the jth observation from the original sample? Justify your answer._
+
+The probability that it is the jth sample is 1/n, so the probability that it not the jth sample is 1 - 1/n
+
+_(b) What is the probability that the second bootstrap observation is not the jth observation from the original sample?_
+
+1 - 1/n
+
+_(c) Argue that the probability that the jth observation is not in the bootstrap sample is (1 − 1/n) ^ n._
+
+We have n picks for the bootstrap.  The probability that any one of them is not the jth sample is (1 - 1/n).  We just multiply them to get the total probability.
+
+_(d) When n = 5, what is the probability that the jth observation is in the bootstrap sample?_
+
+
+```r
+n <- 5
+1 - (1 - 1/n) ^ n
+```
+
+```
+## [1] 0.67232
+```
+
+_(e) When n = 100, what is the probability that the jth observation is in the bootstrap sample?_
+
+
+```r
+n <- 100
+1 - (1 - 1/n) ^ n
+```
+
+```
+## [1] 0.6339677
+```
+
+_(f) When n = 10, 000, what is the probability that the jth observation is in the bootstrap sample?_
+
+
+```r
+n <- 10000
+1 - (1 - 1/n) ^ n
+```
+
+```
+## [1] 0.632139
+```
+
+_(g) Create a plot that displays, for each integer value of n from 1 to 100,000, the probability that the jth observation is in the bootstrap sample. Comment on what you observe._
+
+
+```r
+prob.j <- function(n) 1 - (1 - 1/n) ^ n
+
+plot(1:100000, prob.j(1:100000),type="l")
+```
+
+![](Chapter5Problems_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+_(h) We will now investigate numerically the probability that a bootstrap sample of size n = 100 contains the jth observation. Here j = 4. We repeatedly create bootstrap samples, and each time we record whether or not the fourth observation is contained in the bootstrap sample._
+
+
+```r
+store=rep(NA, 10000)
+for(i in 1:10000){
+  store[i]=sum(sample(1:100, rep=TRUE)==4)>0 }
+mean(store)
+```
+
+```
+## [1] 0.6356
+```
+
+_Comment on the results obtained._
+
+meets expectation
+
 ### Q3
 
 
@@ -22,6 +102,14 @@ K-fold advantave: using more of the samples, so the training set is closer to al
 ii. LOOCV?_
 
 K-fold disadvantage: slower.  Advantage: less bias.
+
+### Q4
+
+_Suppose that we use some statistical learning method to make a prediction for the response Y for a particular value of the predictor X. Carefully describe how we might estimate the standard deviation of our prediction._
+
+As I understand the question, this does not involving creating testing and training samples, so the bootstrap should work.
+
+Take a sample, the same size as n, from our original data, but with replacement.  Make the prediction.  Take another sample, etc, for maybe 1000 times.  Then calculate the SD of the predictions.
 
 ### Q5
 
@@ -135,7 +223,7 @@ _i. Split the sample set into a training set and a validation set._
 train <- sample(nrow(Default),size = ceiling(nrow(Default)/2))
 ```
 
-     
+
 _ii. Fit a multiple logistic regression model using only the training observations._
 
 
@@ -279,6 +367,93 @@ t.test(validation.errors5c, validation.errors5d)
 ```
 
 No significant difference (Although if I run it with 100 splits then it is just barely significant with the 5d model being worse)
+
+### Q6
+
+_We continue to consider the use of a logistic regression model to predict the probability of default using income and balance on the Default data set. In particular, we will now compute estimates for the standard errors of the income and balance logistic regression coefficients in two different ways: (1) using the bootstrap, and (2) using the standard formula for computing the standard errors in the glm() function. Do not forget to set a random seed before beginning your analysis._
+
+_(a) Using the summary() and glm() functions, determine the estimated standard errors for the coefficients associated with income and balance in a multiple logistic regression model that uses both predictors._
+
+
+```r
+set.seed(123)
+glm6a <- glm(default ~ income + balance, family=binomial, data = Default)
+summary(glm6a)
+```
+
+```
+## 
+## Call:
+## glm(formula = default ~ income + balance, family = binomial, 
+##     data = Default)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.4725  -0.1444  -0.0574  -0.0211   3.7245  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -1.154e+01  4.348e-01 -26.545  < 2e-16 ***
+## income       2.081e-05  4.985e-06   4.174 2.99e-05 ***
+## balance      5.647e-03  2.274e-04  24.836  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 2920.6  on 9999  degrees of freedom
+## Residual deviance: 1579.0  on 9997  degrees of freedom
+## AIC: 1585
+## 
+## Number of Fisher Scoring iterations: 8
+```
+
+
+_(b) Write a function, boot.fn(), that takes as input the Default data set as well as an index of the observations, and that outputs the coefficient estimates for income and balance in the multiple logistic regression model._
+
+
+```r
+boot.fn <- function(data, index) {
+  coef(glm(default ~ income + balance, family = binomial, data = data, subset = index))
+}
+boot.fn(Default, 1:150) # test it
+```
+
+```
+##   (Intercept)        income       balance 
+## -9.2442483322 -0.0001309277  0.0059360739
+```
+
+
+
+_(c) Use the boot() function together with your boot.fn() function to estimate the standard errors of the logistic regression coefficients for income and balance._
+
+
+```r
+library(boot)
+boot(data = Default, statistic = boot.fn, R = 1000)
+```
+
+```
+## 
+## ORDINARY NONPARAMETRIC BOOTSTRAP
+## 
+## 
+## Call:
+## boot(data = Default, statistic = boot.fn, R = 1000)
+## 
+## 
+## Bootstrap Statistics :
+##          original        bias     std. error
+## t1* -1.154047e+01 -5.041673e-02 4.327390e-01
+## t2*  2.080898e-05 -7.191513e-08 4.710163e-06
+## t3*  5.647103e-03  3.052693e-05 2.322393e-04
+```
+
+
+_(d) Comment on the estimated standard errors obtained using the glm() function and using your bootstrap function._
+
+The two methods are producing quite similar estimates.
 
 ### Q7
 
@@ -444,12 +619,12 @@ _(b) Create a scatterplot of X against Y . Comment on what you find._
 qplot(x,y)
 ```
 
-![](Chapter5Problems_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](Chapter5Problems_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 relationship is non-linear
 
 _(c) Set a random seed, and then compute the LOOCV errors that result from fitting the following four models using least squares:_
-         
+
 i. Y = β0 + β1X + ε
 ii. Y = β0 + β1X + β2X2 + ε
 iii. Y = β0 +β1X +β2X2 +β3X3 +ε
@@ -637,3 +812,152 @@ for(i in glm.results) print(summary(i))
 ```
 
 Yes, these results are consistent; the first two terms are significant.
+
+## Q9
+
+_9. We will now consider the Boston housing data set, from the MASS library._
+_(a) Based on this data set, provide an estimate for the population mean of medv. Call this estimate μˆ._
+
+
+```r
+data("Boston")
+boston <- as.tibble(Boston)
+mean(boston$medv)
+```
+
+```
+## [1] 22.53281
+```
+
+_(b) Provide an estimate of the standard error of μˆ. Interpret this result._
+_Hint: We can compute the standard error of the sample mean by dividing the sample standard deviation by the square root of the number of observations._
+
+
+```r
+sd(boston$medv) / sqrt(length(boston$medv))
+```
+
+```
+## [1] 0.4088611
+```
+
+_(c) Now estimate the standard error of μˆ using the bootstrap. How does this compare to your answer from (b)?_
+
+
+```r
+boot.fn <- function(data,index) {
+  mean(data[index])
+}
+(boot.result <- boot(boston$medv,boot.fn,1000))
+```
+
+```
+## 
+## ORDINARY NONPARAMETRIC BOOTSTRAP
+## 
+## 
+## Call:
+## boot(data = boston$medv, statistic = boot.fn, R = 1000)
+## 
+## 
+## Bootstrap Statistics :
+##     original      bias    std. error
+## t1* 22.53281 -0.04329921   0.4048984
+```
+
+_(d) Based on your bootstrap estimate from (c), provide a 95 % confidence interval for the mean of medv. Compare it to the results obtained using t.test(Boston$medv)._
+_Hint: You can approximate a 95 % confidence interval using the formula [μˆ − 2SE(μˆ), μˆ + 2SE(μˆ)]._
+
+
+```r
+sd.boot <- sd(boot.result$t)
+mean(boston$medv - 2*sd.boot)
+```
+
+```
+## [1] 21.72301
+```
+
+```r
+mean(boston$medv + 2*sd.boot)
+```
+
+```
+## [1] 23.3426
+```
+
+
+_(e) Based on this data set, provide an estimate, μˆmed, for the median value of medv in the population._
+
+
+```r
+median(boston$medv)
+```
+
+```
+## [1] 21.2
+```
+
+_(f) We now would like to estimate the standard errorof μˆmed. Unfortunately, there is no simple formula for computing the standard error of the median. Instead, estimate the standard error of the median using the bootstrap. Comment on your findings._
+
+
+```r
+boot.fn <- function(data,index) {
+  median(data[index])
+}
+(boot.result <- boot(boston$medv,boot.fn,1000))
+```
+
+```
+## 
+## ORDINARY NONPARAMETRIC BOOTSTRAP
+## 
+## 
+## Call:
+## boot(data = boston$medv, statistic = boot.fn, R = 1000)
+## 
+## 
+## Bootstrap Statistics :
+##     original  bias    std. error
+## t1*     21.2 0.00665   0.3758118
+```
+
+The median has a somewhat smaller std error.
+
+_(g) Based on this data set, provide an estimate for the tenth percentile of medv in Boston suburbs. Call this quantity μˆ0.1. (You can use the quantile() function.)_
+
+
+```r
+quantile(boston$medv, 0.1)
+```
+
+```
+##   10% 
+## 12.75
+```
+
+_(h) Use the bootstrap to estimate the standard error of μˆ0.1. Comment on your findings._
+
+
+```r
+boot.fn <- function(data,index) {
+  quantile(data[index],.1)
+}
+(boot.result <- boot(boston$medv,boot.fn,1000))
+```
+
+```
+## 
+## ORDINARY NONPARAMETRIC BOOTSTRAP
+## 
+## 
+## Call:
+## boot(data = boston$medv, statistic = boot.fn, R = 1000)
+## 
+## 
+## Bootstrap Statistics :
+##     original  bias    std. error
+## t1*    12.75  0.0148   0.5021684
+```
+
+higher standard error...makes sense

@@ -1,0 +1,36 @@
+unnamed-chunk-1	n
+unnamed-chunk-2	n
+unnamed-chunk-3	n
+unnamed-chunk-4	prob.j
+unnamed-chunk-5	i	store	.Random.seed
+unnamed-chunk-6	Default
+unnamed-chunk-7	glm5a
+unnamed-chunk-8	train
+unnamed-chunk-9	glm5b
+unnamed-chunk-10	glm5b.predict
+unnamed-chunk-11	validation.error
+unnamed-chunk-12	validation.errors5c
+unnamed-chunk-13	Default	validation.errors5d
+unnamed-chunk-14	
+unnamed-chunk-15	glm6a
+unnamed-chunk-16	boot.fn
+unnamed-chunk-17	
+unnamed-chunk-18	glm7a	Weekly
+unnamed-chunk-19	glm7b
+unnamed-chunk-20	
+unnamed-chunk-21	loocv.errors
+unnamed-chunk-22	
+unnamed-chunk-23	x	y
+unnamed-chunk-24	
+unnamed-chunk-25	data.8c
+unnamed-chunk-26	
+unnamed-chunk-27	
+unnamed-chunk-28	glm.results	i
+unnamed-chunk-29	boston	Boston
+unnamed-chunk-30	
+unnamed-chunk-31	boot.fn	boot.result
+unnamed-chunk-32	sd.boot
+unnamed-chunk-33	
+unnamed-chunk-34	boot.fn	boot.result
+unnamed-chunk-35	
+unnamed-chunk-36	boot.fn	boot.result

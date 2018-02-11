@@ -1,0 +1,36 @@
+unnamed-chunk-1	n
+unnamed-chunk-2	n
+unnamed-chunk-3	n
+unnamed-chunk-4	prob.j	n	plot
+unnamed-chunk-5	store	rep	i	sum	sample	mean
+unnamed-chunk-6	library	ISLR	MASS	tidyverse	data	Default	head	set.seed
+unnamed-chunk-7	glm5a	glm	default	balance	income	binomial	Default	summary
+unnamed-chunk-8	train	sample	nrow	Default	ceiling
+unnamed-chunk-9	glm5b	update	glm5a	train	summary
+unnamed-chunk-10	summary	Default	default	glm5b.predict	predict	glm5b	train	ifelse
+unnamed-chunk-11	table	glm5b.predict	Default	default	train	validation.error	mean
+unnamed-chunk-12	validation.errors5c	sapply	train_test	sample	c	nrow	Default	default.train	default.validate	glm5c	glm	default	balance	income	binomial	glm5c.predict	predict	ifelse	mean
+unnamed-chunk-13	Default	student01	as.numeric	student	validation.errors5d	sapply	train_test	sample	c	nrow	default.train	default.validate	glm5d	glm	default	balance	income	binomial	glm5d.predict	predict	ifelse	mean
+unnamed-chunk-14	t.test	validation.errors5c	validation.errors5d
+unnamed-chunk-15	set.seed	glm6a	glm	default	income	balance	binomial	Default	summary
+unnamed-chunk-16	boot.fn	coef	glm	default	income	balance	binomial	data	index	Default
+unnamed-chunk-17	library	boot	Default	boot.fn
+unnamed-chunk-18	data	head	Weekly	glm7a	glm	Direction	Lag1	Lag2	binomial	summary
+unnamed-chunk-19	glm7b	glm	Direction	Lag1	Lag2	Weekly	binomial	summary
+unnamed-chunk-20	predict	glm7b	Weekly	Direction
+unnamed-chunk-21	loocv.errors	sapply	nrow	Weekly	glm7d	glm	Direction	Lag1	Lag2	i	binomial	prediction.7d	predict	ifelse	as.numeric
+unnamed-chunk-22	mean	loocv.errors
+unnamed-chunk-23	set.seed	x	rnorm	y
+unnamed-chunk-24	qplot	x	y
+unnamed-chunk-25	data.8c	tibble	x	y
+unnamed-chunk-26	library	boot	set.seed	sapply	glm.tmp	glm	y	poly	x	i	data.8c	cv.glm	delta
+unnamed-chunk-27	set.seed	sapply	glm.tmp	glm	y	poly	x	i	data.8c	cv.glm	delta
+unnamed-chunk-28	glm.results	lapply	glm	y	poly	x	i	data.8c	print	summary
+unnamed-chunk-29	data	boston	as.tibble	Boston	mean	medv
+unnamed-chunk-30	sd	boston	medv	sqrt	length
+unnamed-chunk-31	boot.fn	mean	data	index	boot.result	boot	boston	medv
+unnamed-chunk-32	sd.boot	sd	boot.result	t	mean	boston	medv
+unnamed-chunk-33	median	boston	medv
+unnamed-chunk-34	boot.fn	median	data	index	boot.result	boot	boston	medv
+unnamed-chunk-35	quantile	boston	medv
+unnamed-chunk-36	boot.fn	quantile	data	index	boot.result	boot	boston	medv
