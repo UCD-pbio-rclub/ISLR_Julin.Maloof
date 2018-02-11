@@ -133,6 +133,42 @@ t.test(validation.errors5c, validation.errors5d)
 
 No significant difference (Although if I run it with 100 splits then it is just barely significant with the 5d model being worse)
 
+### Q6
+
+_We continue to consider the use of a logistic regression model to predict the probability of default using income and balance on the Default data set. In particular, we will now compute estimates for the standard errors of the income and balance logistic regression coefficients in two different ways: (1) using the bootstrap, and (2) using the standard formula for computing the standard errors in the glm() function. Do not forget to set a random seed before beginning your analysis._
+
+_(a) Using the summary() and glm() functions, determine the estimated standard errors for the coefficients associated with income and balance in a multiple logistic regression model that uses both predictors._
+
+```{r}
+set.seed(123)
+glm6a <- glm(default ~ income + balance, family=binomial, data = Default)
+summary(glm6a)
+```
+
+
+_(b) Write a function, boot.fn(), that takes as input the Default data set as well as an index of the observations, and that outputs the coefficient estimates for income and balance in the multiple logistic regression model._
+
+```{r}
+boot.fn <- function(data, index) {
+  coef(glm(default ~ income + balance, family = binomial, data = data, subset = index))
+}
+boot.fn(Default, 1:150) # test it
+```
+
+
+
+_(c) Use the boot() function together with your boot.fn() function to estimate the standard errors of the logistic regression coefficients for income and balance._
+
+```{r}
+library(boot)
+boot(data = Default, statistic = boot.fn, R = 1000)
+```
+
+
+_(d) Comment on the estimated standard errors obtained using the glm() function and using your bootstrap function._
+
+The two methods are producing quite similar estimates.
+
 ### Q7
 
 _In Sections 5.3.2 and 5.3.3, we saw that the cv.glm() function can be used in order to compute the LOOCV test error estimate. Alterna- tively, one could compute those quantities using just the glm() and predict.glm() functions, and a for loop. You will now take this ap- proach in order to compute the LOOCV error for a simple logistic regression model on the Weekly data set. Recall that in the context of classification problems, the LOOCV error is given in (5.4)._
