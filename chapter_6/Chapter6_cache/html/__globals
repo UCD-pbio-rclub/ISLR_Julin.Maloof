@@ -1,0 +1,8 @@
+unnamed-chunk-1	data	College	head	Private	as.numeric	set.seed	train	sample	c	nrow	college.train	%>%	as_tibble	filter	college.test
+unnamed-chunk-2	lm9b	lm	Apps	.	college.train	summary
+unnamed-chunk-3	lm9c.predict	predict	lm9b	college.test	test.error	Apps	%>%	mean
+unnamed-chunk-4	ridge9c	college.train	%>%	select	Apps	as.matrix	glmnet
+unnamed-chunk-5	cv.out	college.train	%>%	select	Apps	as.matrix	cv.glmnet
+unnamed-chunk-6	plot	cv.out	lam1se	lambda.1se	log
+unnamed-chunk-7	ridge9c.predict	college.test	%>%	select	Apps	as.matrix	predict	ridge9c	lam1se	.	mean
+unnamed-chunk-8	ridge9c.predict	college.test	%>%	select	Apps	as.matrix	predict	ridge9c	cv.out	lambda.min	.	mean

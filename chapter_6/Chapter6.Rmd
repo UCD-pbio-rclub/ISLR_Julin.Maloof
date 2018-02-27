@@ -1,0 +1,145 @@
+---
+title: "Chapter 6"
+author: "Julin N Maloof"
+date: "2/27/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, autodep = TRUE)
+library(ISLR)
+library(glmnet)
+library(tidyverse)
+```
+
+
+## Q3
+
+_Asks about adding an additional constraint to a standard least squares where we limit the size of the beta coefficients to be less than some value _s_._
+
+_For parts (a) through (e), indicate which of i. through v. is correct. Justify your answer._
+
+_i. Increase initially, and then eventually start decreasing in an inverted U shape._
+_ii. Decrease initially, and then eventually start increasing in a U shape._
+_iii. Steadily increase._
+_iv. Steadily decrease._
+_v. Remain constant._
+
+_(a) As we increase s from 0, the training RSS will:_
+
+iv. Steadliy decrease.  We have a more and more flexible model so it will better be able to fit the training set.  Actually it won't steadly decrease, it will plateau...
+
+_(b) Repeat (a) for test RSS._
+
+I think this depends on the scenario.  If we have a small number of good predictors then this will be pretty similar to (a).  OTOH if we have a large number of predictors, or some that aren't good predictors, then 
+
+ii. Decrease initially, and then eventually start increasing in a U shape.
+
+_(c) variance_
+
+Variance is high if there are a lot of differences in models when we use different training sets.
+
+with low s we won't fit anything well (and the model won't change much from training to training) so variance will be low.  As s increases there will start to be more and more difference betweenthe models, so I expect Variance to increase.
+
+_(d) Squared bias._
+
+Bias represents the difference between our model and the data.  When s = 0 then there is no flexibility and bias will be high.  This will decrease as s increases.
+
+_(e) irreducible error._
+
+By definition this should remain constant.
+
+## Q4
+
+_This asks the same questions as 3, but here the model is the Ridge Regression model and penalizes based on lambda, the tuning coefficent that is amultiplier for the sum of the squred beta coefficients._
+
+_As we increase lambda from 0..._
+
+_(a) training RSS_
+
+Will steadily decrease as we fit less and less flexible models
+
+_(b) test RSS_
+
+Will decrease as we reduce variance, and then increase as eventually we increase bias
+
+_(c) variance_
+
+Will decrease steadily
+
+_(d) bias_
+
+will increase steadily
+
+_(e) irreducible error_
+
+unchanged
+
+## Q5 a, b
+
+## Q9 a, b, c
+
+_9. In this exercise, we will predict the number of applications received using the other variables in the College data set._
+
+_(a) Split the data set into a training set and a test set._
+
+```{r}
+data(College)
+head(College)
+College$Private <- as.numeric(College$Private)-1 # 0 = no, 1 = yes
+set.seed(123)
+train <- sample(c(TRUE,FALSE),size = nrow(College),prob = c(0.80,0.20),replace=TRUE)
+college.train <- College %>% as_tibble() %>% filter(train)
+college.test <- College %>% as_tibble() %>% filter(!train)
+```
+
+
+_(b) Fit a linear model using least squares on the training set, and report the test error obtained._
+
+```{r}
+lm9b <- lm(Apps ~ . , data = college.train)
+summary(lm9b)
+```
+
+```{r}
+lm9c.predict <- predict(lm9b,newdata = college.test)
+test.error <- (college.test$Apps - lm9c.predict)^2 %>% mean()
+test.error
+```
+
+
+_(c) Fit a ridge regression model on the training set, with λ chosen by cross-validation. Report the test error obtained._
+
+```{r}
+ridge9c <- college.train %>% select(-Apps) %>% as.matrix() %>%
+  glmnet(y=college.train$Apps, alpha = 0)
+```
+
+```{r}
+cv.out <- college.train %>% select(-Apps) %>% as.matrix() %>%
+  cv.glmnet(y=college.train$Apps, alpha = 0)
+```
+
+```{r}
+plot(cv.out)
+lam1se=cv.out$lambda.1se
+lam1se
+log(lam1se)
+```
+
+```{r}
+ridge9c.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
+  predict(ridge9c,s=lam1se,newx=.)
+(college.test$Apps - ridge9c.predict)^2 %>% mean()
+```
+Something wrong??
+
+```{r}
+ridge9c.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
+  predict(ridge9c,s=cv.out$lambda.min,newx=.)
+(college.test$Apps - ridge9c.predict)^2 %>% mean()
+```
+
+Still high...

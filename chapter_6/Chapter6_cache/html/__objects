@@ -1,0 +1,8 @@
+unnamed-chunk-1	College	college.test	college.train	train	.Random.seed
+unnamed-chunk-2	lm9b
+unnamed-chunk-3	lm9c.predict	test.error
+unnamed-chunk-4	ridge9c
+unnamed-chunk-5	cv.out
+unnamed-chunk-6	lam1se
+unnamed-chunk-7	ridge9c.predict
+unnamed-chunk-8	ridge9c.predict
