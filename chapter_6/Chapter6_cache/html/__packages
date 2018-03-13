@@ -11,3 +11,5 @@ readr
 purrr
 dplyr
 bindrcpp
+leaps
+pls
