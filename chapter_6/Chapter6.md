@@ -1,6 +1,11 @@
-# Chapter 6
-Julin N Maloof  
-2/27/2018  
+---
+title: "Chapter 6"
+author: "Julin N Maloof"
+date: "2/27/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
 
 
 
@@ -49,7 +54,7 @@ _As we increase lambda from 0..._
 
 _(a) training RSS_
 
-Will steadily decrease as we fit less and less flexible models
+Will steadily increase as we fit less and less flexible models
 
 _(b) test RSS_
 
@@ -114,8 +119,8 @@ head(College)
 
 ```r
 College$Private <- as.numeric(College$Private)-1 # 0 = no, 1 = yes
-set.seed(123)
-train <- sample(c(TRUE,FALSE),size = nrow(College),prob = c(0.80,0.20),replace=TRUE)
+set.seed(11)
+train <- sample(c(TRUE,FALSE),size = nrow(College),prob = c(0.50,0.50),replace=TRUE)
 college.train <- College %>% as_tibble() %>% filter(train)
 college.test <- College %>% as_tibble() %>% filter(!train)
 ```
@@ -136,34 +141,34 @@ summary(lm9b)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -4717.8  -369.3   -18.5   274.6  7587.3 
+## -5716.1  -450.2   -20.6   354.8  6246.3 
 ## 
 ## Coefficients:
 ##               Estimate Std. Error t value Pr(>|t|)    
-## (Intercept) -688.43195  444.05806  -1.550 0.121591    
-## Private     -425.27078  153.35092  -2.773 0.005723 ** 
-## Accept         1.61595    0.04351  37.136  < 2e-16 ***
-## Enroll        -1.08780    0.20094  -5.414 8.93e-08 ***
-## Top10perc     38.90903    6.14557   6.331 4.76e-10 ***
-## Top25perc     -8.48165    4.81936  -1.760 0.078931 .  
-## F.Undergrad    0.07257    0.03486   2.082 0.037794 *  
-## P.Undergrad    0.07315    0.03602   2.031 0.042688 *  
-## Outstate      -0.07236    0.02125  -3.405 0.000707 ***
-## Room.Board     0.10194    0.05350   1.905 0.057213 .  
-## Books         -0.13449    0.26193  -0.513 0.607835    
-## Personal       0.07104    0.06988   1.017 0.309756    
-## PhD           -8.21216    5.21613  -1.574 0.115926    
-## Terminal      -3.73357    5.63224  -0.663 0.507654    
-## S.F.Ratio     24.11325   14.18632   1.700 0.089695 .  
-## perc.alumni    4.73124    4.59216   1.030 0.303290    
-## Expend         0.09618    0.01416   6.791 2.68e-11 ***
-## Grad.Rate      6.97940    3.23140   2.160 0.031178 *  
+## (Intercept) -1.280e+03  6.137e+02  -2.086 0.037660 *  
+## Private     -3.565e+02  2.134e+02  -1.670 0.095769 .  
+## Accept       1.665e+00  5.540e-02  30.047  < 2e-16 ***
+## Enroll      -1.027e+00  2.823e-01  -3.637 0.000315 ***
+## Top10perc    4.775e+01  9.520e+00   5.016 8.29e-07 ***
+## Top25perc   -1.457e+01  7.267e+00  -2.005 0.045732 *  
+## F.Undergrad  6.168e-02  5.037e-02   1.225 0.221487    
+## P.Undergrad  9.894e-02  4.505e-02   2.196 0.028712 *  
+## Outstate    -1.430e-01  3.136e-02  -4.559 7.03e-06 ***
+## Room.Board   1.665e-01  8.198e-02   2.031 0.042958 *  
+## Books       -2.989e-01  3.387e-01  -0.883 0.378073    
+## Personal     2.846e-02  9.729e-02   0.293 0.770013    
+## PhD         -1.512e+01  6.782e+00  -2.230 0.026342 *  
+## Terminal     1.833e+00  7.345e+00   0.250 0.803034    
+## S.F.Ratio    4.230e+01  2.036e+01   2.078 0.038390 *  
+## perc.alumni  5.802e+00  6.495e+00   0.893 0.372242    
+## Expend       1.594e-01  2.601e-02   6.130 2.29e-09 ***
+## Grad.Rate    1.276e+01  4.693e+00   2.719 0.006855 ** 
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 1038 on 601 degrees of freedom
-## Multiple R-squared:  0.9336,	Adjusted R-squared:  0.9317 
-## F-statistic: 496.9 on 17 and 601 DF,  p-value: < 2.2e-16
+## Residual standard error: 1150 on 363 degrees of freedom
+## Multiple R-squared:  0.9256,	Adjusted R-squared:  0.9222 
+## F-statistic: 265.8 on 17 and 363 DF,  p-value: < 2.2e-16
 ```
 
 
@@ -174,7 +179,7 @@ test.error
 ```
 
 ```
-## [1] 1203826
+## [1] 1101422
 ```
 
 
@@ -205,7 +210,7 @@ lam1se
 ```
 
 ```
-## [1] 1827.768
+## [1] 2476.486
 ```
 
 ```r
@@ -213,7 +218,7 @@ log(lam1se)
 ```
 
 ```
-## [1] 7.510851
+## [1] 7.814596
 ```
 
 
@@ -224,7 +229,7 @@ ridge9c.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
 ```
 
 ```
-## [1] 1663179
+## [1] 1207395
 ```
 Something wrong??
 
@@ -236,7 +241,7 @@ ridge9c.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
 ```
 
 ```
-## [1] 1292858
+## [1] 1035787
 ```
 
 Still high...

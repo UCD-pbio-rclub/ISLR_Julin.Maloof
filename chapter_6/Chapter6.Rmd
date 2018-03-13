@@ -59,7 +59,7 @@ _As we increase lambda from 0..._
 
 _(a) training RSS_
 
-Will steadily decrease as we fit less and less flexible models
+Will steadily increase as we fit less and less flexible models
 
 _(b) test RSS_
 
@@ -89,8 +89,8 @@ _(a) Split the data set into a training set and a test set._
 data(College)
 head(College)
 College$Private <- as.numeric(College$Private)-1 # 0 = no, 1 = yes
-set.seed(123)
-train <- sample(c(TRUE,FALSE),size = nrow(College),prob = c(0.80,0.20),replace=TRUE)
+set.seed(11)
+train <- sample(c(TRUE,FALSE),size = nrow(College),prob = c(0.50,0.50),replace=TRUE)
 college.train <- College %>% as_tibble() %>% filter(train)
 college.test <- College %>% as_tibble() %>% filter(!train)
 ```
