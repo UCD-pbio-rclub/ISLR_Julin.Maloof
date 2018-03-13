@@ -6,3 +6,25 @@ unnamed-chunk-5	cv.out	college.train	%>%	select	Apps	as.matrix	cv.glmnet
 unnamed-chunk-6	plot	cv.out	lam1se	lambda.1se	log
 unnamed-chunk-7	ridge9c.predict	college.test	%>%	select	Apps	as.matrix	predict	ridge9c	lam1se	.	mean
 unnamed-chunk-8	ridge9c.predict	college.test	%>%	select	Apps	as.matrix	predict	ridge9c	cv.out	lambda.min	.	mean
+unnamed-chunk-9	lasso9d	college.train	%>%	select	Apps	as.matrix	glmnet
+unnamed-chunk-10	cv.out	college.train	%>%	select	Apps	as.matrix	cv.glmnet
+unnamed-chunk-11	plot	cv.out	lam1se	lambda.1se	log
+unnamed-chunk-12	lasso9d.predict	college.test	%>%	select	Apps	as.matrix	predict	lasso9d	lam1se	.	mean
+unnamed-chunk-13	lasso9d.predict	college.test	%>%	select	Apps	as.matrix	predict	lasso9d	cv.out	lambda.min	.	mean
+unnamed-chunk-14	lasso9d.predict	college.test	%>%	select	Apps	as.matrix	predict	lasso9d	.	mean
+unnamed-chunk-15	data	Boston	boston	as_tibble
+unnamed-chunk-16	bs	regsubsets	crim	.	boston	bs.sum	summary	plot
+unnamed-chunk-17	bs.plot.frame	tibble	bs.sum	rsq	adjr2	cp	bic	%>%	gather	predictors	ggplot	aes	value	geom_line	facet_wrap	criterion
+unnamed-chunk-18	predict.regsubsets	form	as.formula	object	call	mat	model.matrix	newdata	coefi	coef	id	xvars	names	%*%
+unnamed-chunk-19	k	set.seed	folds	sample	nrow	boston	cv.errors	matrix	list	paste
+unnamed-chunk-20	j	k	best.fit	regsubsets	crim	.	boston	folds	i	pred	predict	cv.errors	mean
+unnamed-chunk-21	mean.cv.errors	apply	cv.errors	mean	plot
+unnamed-chunk-22	reg.best	regsubsets	crim	.	boston	coef
+unnamed-chunk-23	mod.matrix	model.matrix	crim	.	boston	boston.ridge	glmnet	boston.ridge.cv	cv.glmnet	folds	plot
+unnamed-chunk-24	boston.ridge.cv	lambda.min	lambda.1se	cvm	lambda	coef	boston.ridge
+unnamed-chunk-25	mod.matrix	model.matrix	crim	.	boston	boston.lasso	glmnet	boston.lasso.cv	cv.glmnet	folds	plot
+unnamed-chunk-26	boston.lasso.cv	lambda.min	lambda.1se	cvm	lambda	coef	boston.lasso
+unnamed-chunk-27	set.seed	boston.pcr	pcr	crim	.	boston	summary
+unnamed-chunk-28	validationplot	boston.pcr
+unnamed-chunk-29	set.seed	boston.pls	plsr	crim	.	boston	summary
+unnamed-chunk-30	validationplot	boston.pls

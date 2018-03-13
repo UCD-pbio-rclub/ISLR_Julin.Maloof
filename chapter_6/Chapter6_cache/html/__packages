@@ -13,3 +13,5 @@ dplyr
 bindrcpp
 stringr
 forcats
+leaps
+pls

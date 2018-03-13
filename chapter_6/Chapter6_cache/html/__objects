@@ -6,3 +6,25 @@ unnamed-chunk-5	cv.out
 unnamed-chunk-6	lam1se
 unnamed-chunk-7	ridge9c.predict
 unnamed-chunk-8	ridge9c.predict
+unnamed-chunk-9	lasso9d
+unnamed-chunk-10	cv.out
+unnamed-chunk-11	lam1se
+unnamed-chunk-12	lasso9d.predict
+unnamed-chunk-13	lasso9d.predict
+unnamed-chunk-14	lasso9d.predict
+unnamed-chunk-15	boston	Boston
+unnamed-chunk-16	bs	bs.sum
+unnamed-chunk-17	bs.plot.frame
+unnamed-chunk-18	predict.regsubsets
+unnamed-chunk-19	cv.errors	folds	k
+unnamed-chunk-20	best.fit	cv.errors	i	j	pred
+unnamed-chunk-21	mean.cv.errors
+unnamed-chunk-22	reg.best
+unnamed-chunk-23	boston.ridge	boston.ridge.cv	mod.matrix
+unnamed-chunk-24	
+unnamed-chunk-25	boston.lasso	boston.lasso.cv	mod.matrix
+unnamed-chunk-26	
+unnamed-chunk-27	boston.pcr
+unnamed-chunk-28	
+unnamed-chunk-29	boston.pls
+unnamed-chunk-30	

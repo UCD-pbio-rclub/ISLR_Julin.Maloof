@@ -12,8 +12,30 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE, autodep = TRUE)
 library(ISLR)
 library(glmnet)
 library(tidyverse)
+library(leaps)
+library(pls)
 ```
 
+
+## Q2
+_For parts (a) through (c), indicate which of i. through iv. is correct. Justify your answer._
+_i. More flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance._
+_ii. More flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias._
+_iii. Less flexible and hence will give improved prediction accuracy when its increase in bias is less than its decrease in variance._
+_iv. Less flexible and hence will give improved prediction accuracy when its increase in variance is less than its decrease in bias._
+
+### _(a) The lasso, relative to least squares, is:_
+
+iii.  Because lasso forces some coefficients to zero it is less flexible.  This will cause an increase in bias but a decrease in variance.
+
+### _(b) Repeat (a) for ridge regression relative to least squares._
+
+iii.  Because lasso forces some coefficients to be small it is less flexible.  This will cause an increase in bias but a decrease in variance.
+
+
+### _(c) Repeat (a) for non-linear methods relative to least squares._
+
+ii.  Because the model is not constrained to be linear there is more flexibility.  This flexibility can reduce bias but also will increase variance.
 
 ## Q3
 
@@ -77,9 +99,11 @@ _(e) irreducible error_
 
 unchanged
 
-## Q5 a, b
+## Q5 
 
-## Q9 a, b, c
+## Q8
+
+## Q9 
 
 _9. In this exercise, we will predict the number of applications received using the other variables in the College data set._
 
@@ -143,3 +167,182 @@ ridge9c.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
 ```
 
 Still high...
+
+_(d) Fit a lasso model on the training set, with λ chosen by cross- validation. Report the test error obtained, along with the number of non-zero coefficient estimates._
+
+```{r}
+lasso9d <- college.train %>% select(-Apps) %>% as.matrix() %>%
+  glmnet(y=college.train$Apps, alpha = 1)
+```
+
+```{r}
+cv.out <- college.train %>% select(-Apps) %>% as.matrix() %>%
+  cv.glmnet(y=college.train$Apps, alpha = 1)
+```
+
+```{r}
+plot(cv.out)
+lam1se=cv.out$lambda.1se
+lam1se
+log(lam1se)
+```
+
+```{r}
+lasso9d.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
+  predict(lasso9d,s=lam1se,newx=.)
+(college.test$Apps - lasso9d.predict)^2 %>% mean()
+```
+Larger than lm.  Something wrong??
+
+```{r}
+lasso9d.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
+  predict(lasso9d,s=cv.out$lambda.min,newx=.)
+(college.test$Apps - lasso9d.predict)^2 %>% mean()
+```
+
+```{r}
+lasso9d.predict <- college.test %>% select(-Apps) %>% as.matrix() %>%
+  predict(lasso9d,s=0,newx=.)
+(college.test$Apps - lasso9d.predict)^2 %>% mean()
+```
+
+## Q11
+_We will now try to predict per capita crime rate in the Boston data set._
+
+### a
+_Try out some of the regression methods explored in this chapter, such as best subset selection, the lasso, ridge regression, and PCR. Present and discuss results for the approaches that you consider._
+
+Prepare the data
+```{r}
+data(Boston, package = "MASS")
+boston <- as_tibble(Boston)
+boston
+```
+
+#### Best Subset
+
+```{r}
+bs <- regsubsets(crim ~ .,data=boston,nvmax = 13)
+(bs.sum <- summary(bs))
+plot(bs)
+```
+
+make my own plot
+```{r}
+bs.plot.frame <- tibble(predictors=1:13,bs.sum$rsq, bs.sum$adjr2, bs.sum$cp, bs.sum$bic) %>%
+  gather(key="criterion",value="value",-predictors)
+bs.plot.frame %>% ggplot(aes(x=predictors,y=value)) +
+  geom_line() +
+  facet_wrap(~criterion,scales="free_y")
+```
+
+Get pretty different answers here.  Try a CV approach.
+
+
+```{r}
+#From ISLR book
+predict.regsubsets  <- function (object ,newdata ,id ,...){
+ form=as.formula(object$call [[2]])
+ mat=model.matrix(form,newdata)
+ coefi=coef(object ,id=id)
+ xvars=names(coefi)
+ mat[,xvars]%*%coefi}
+```
+
+create folds
+```{r}
+k <- 10
+set.seed(123)
+folds <- sample(1:k,nrow(boston),replace=TRUE)
+cv.errors <- matrix(NA,k,13, dimnames=list(NULL, paste(1:13)))
+```
+
+test the folds
+```{r}
+for(j in 1:k){
+  best.fit <- regsubsets(crim ~ . , data=boston[folds!=j,],nvmax = 13)
+  for(i in 1:13) {
+    pred=predict(best.fit, boston[folds==j,],id=i)
+    cv.errors[j,i] <- mean( (boston$crim[folds==j]-pred)^2)
+  } 
+}
+```
+
+check the CV MSE
+```{r}
+(mean.cv.errors <- apply(cv.errors ,2,mean))
+plot(mean.cv.errors, type='b')
+```
+12 predictors in best... refit model
+```{r}
+reg.best <- regsubsets(crim ~ ., data=boston , nvmax=12)
+coef(reg.best,12)
+```
+
+#### ridge
+
+```{r}
+mod.matrix <- model.matrix(crim ~ . -1., data = boston)
+boston.ridge <- glmnet(mod.matrix, boston$crim, alpha=0)
+boston.ridge.cv <- cv.glmnet(mod.matrix, boston$crim, alpha=0, foldid=folds)
+plot(boston.ridge.cv)
+```
+
+```{r}
+boston.ridge.cv$lambda.min
+boston.ridge.cv$lambda.1se
+boston.ridge.cv$cvm[boston.ridge.cv$lambda==boston.ridge.cv$lambda.min]
+boston.ridge.cv$cvm[boston.ridge.cv$lambda==boston.ridge.cv$lambda.1se]
+coef(boston.ridge,s=boston.ridge.cv$lambda.min)
+coef(boston.ridge,s=boston.ridge.cv$lambda.1se)
+```
+
+#### lasso
+
+```{r}
+mod.matrix <- model.matrix(crim ~ . -1., data = boston)
+boston.lasso <- glmnet(mod.matrix, boston$crim, alpha=1)
+boston.lasso.cv <- cv.glmnet(mod.matrix, boston$crim, alpha=1, foldid=folds)
+plot(boston.lasso.cv)
+```
+
+```{r}
+boston.lasso.cv$lambda.min
+boston.lasso.cv$lambda.1se
+boston.lasso.cv$cvm[boston.lasso.cv$lambda==boston.lasso.cv$lambda.min]
+boston.lasso.cv$cvm[boston.lasso.cv$lambda==boston.lasso.cv$lambda.1se]
+coef(boston.lasso,s=boston.lasso.cv$lambda.min)
+coef(boston.lasso,s=boston.lasso.cv$lambda.1se)
+```
+#### PCR
+
+```{r}
+set.seed(1)
+boston.pcr <- pcr(crim ~ . , data=boston, scale=TRUE, validation="CV")
+summary(boston.pcr)
+```
+
+```{r}
+validationplot(boston.pcr, val.type = "MSEP")
+```
+
+So something like 3 components is good
+
+#### PLS
+
+```{r}
+set.seed(1)
+boston.pls <- plsr(crim ~ . , data=boston, scale=TRUE, validation="CV")
+summary(boston.pls)
+```
+
+```{r}
+validationplot(boston.pls, val.type = "MSEP")
+```
+
+
+### b
+_Propose a model (or set of models) that seem to perform well on this data set, and justify your answer. Make sure that you are evaluating model performance using validation set error, cross- validation, or some other reasonable alternative, as opposed to using training error._
+
+### c
+_Does your chosen model involve all of the features in the data set? Why or why not?_
