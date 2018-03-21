@@ -143,3 +143,62 @@ ggplot(pred.df,aes(x=age,y=fit,ymin=lower.95,ymax=upper.95)) +
 summary(fits.cut$fit[[3]])
 ```
 
+## Q7
+
+_7. The Wage data set contains a number of other features not explored in this chapter, such as marital status (maritl), job class (jobclass), and others. Explore the relationships between some of these other predictors and wage, and use non-linear fitting techniques in order to fit flexible models to the data. Create plots of the results obtained, and write a summary of your findings._
+
+First make a plot...
+
+```{r}
+pairs(Wage)
+```
+
+Looks like the potentially interesting variables are maritil, race, and education
+
+```{r}
+Wage %>% select(wage,maritl, race, education, health) %>% pairs()
+```
+
+OK this doesn't really make since because the rest of these are categorical. but anyway...
+
+### polynomials
+```{r}
+fit1 <- lm(wage ~ poly(age,3) + poly(as.numeric(maritl),3) + poly(as.numeric(race),3) + poly(as.numeric(education),3) ,data=na.omit(Wage))
+
+summary(fit1)
+```
+
+```{r}
+fit2  <- lm(wage ~ poly(age,2) + poly(as.numeric(maritl),3) + poly(as.numeric(race),1) + poly(as.numeric(education),2) ,data=Wage)
+
+summary(fit2)
+```
+
+cross validation
+```{r}
+
+fit.cv <- function(folds,data=Wage) {
+  sapply(1:max(folds), function(fold) {
+    train=data[folds!=fold,]
+    test=data[folds==fold,]
+    fit <- lm(wage ~ poly(age,2) + poly(as.numeric(maritl),3) + poly(as.numeric(race),1) + poly(as.numeric(education),2) ,data=train)
+    pred.cv <- predict(fit,newdata=test)
+    MSE <- (test$wage-pred.cv)^2 %>% mean()
+    MSE
+  }
+  )
+}
+
+cv.results <- fit.cv(folds)
+
+cv.results
+
+mean(cv.results)
+
+sd(cv.results)
+```
+
+This is a better fit than obtained above.
+
+### splines
+
