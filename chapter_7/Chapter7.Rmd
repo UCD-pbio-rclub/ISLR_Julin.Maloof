@@ -28,22 +28,22 @@ head(Wage)
 
 
 ```{r}
-fits <- tibble(degree=1:15)
+fits.poly <- tibble(degree=1:15)
 fitpoly <- function(degree,data=Wage) {
   lm(wage ~ poly(age,degree=degree), data=Wage)
 }
-fits <- fits %>% mutate(fit=map(degree, fitpoly))
-fits # a column of models...
+fits.poly <- fits.poly %>% mutate(fit=map(degree, fitpoly))
+fits.poly # a column of models...
 ```
 
 some stats for each model
 ```{r}
-fits <- fits %>% mutate(glance=map(fit,glance))
-fits %>% unnest(glance)
+fits.poly <- fits.poly %>% mutate(glance=map(fit,glance))
+fits.poly %>% unnest(glance)
 ```
 
 ```{r}
-fits$fit %>% do.call(anova,.)
+fits.poly$fit %>% do.call(anova,.)
 ```
 
 So...anova suggests that degree=3 is best.  This also is consistent with the adjusted R-squared.
@@ -51,7 +51,7 @@ So...anova suggests that degree=3 is best.  This also is consistent with the adj
 get predictions from degree=3 model
 ```{r}
 pred.df <- tibble(age=seq(min(Wage$age),max(Wage$age),by=1))
-pred.df <- cbind(pred.df, predict(fits$fit[[3]], newdata=pred.df, se.fit=TRUE))
+pred.df <- cbind(pred.df, predict(fits.poly$fit[[3]], newdata=pred.df, se.fit=TRUE))
 pred.df <- pred.df %>% mutate(upper.95 = fit + 2*se.fit, lower.95 = fit - 2*se.fit)
 ```
 
@@ -66,4 +66,80 @@ ggplot(pred.df,aes(x=age,y=fit,ymin=lower.95,ymax=upper.95)) +
 
 
 _(b) Fit a step function to predict wage using age, and perform cross-validation to choose the optimal number of cuts. Make a plot of the fit obtained._
+
+```{r}
+fits.cut <- tibble(cuts=2:10)
+fitcut<- function(cuts,data=Wage) {
+  lm(wage ~ cut(age,cuts), data=Wage)
+}
+fits.cut <- fits.cut %>% mutate(fit=map(cuts, fitcut))
+fits.cut # a column of models...
+```
+
+some stats for each model
+```{r}
+fits.cut <- fits.cut %>% mutate(glance=map(fit,glance))
+fits.cut %>% unnest(glance)
+```
+
+cross validation
+```{r}
+k <- 10
+folds <- sample(1:k,nrow(Wage),replace = TRUE)
+
+fitcut.cv <- function(cuts,folds,data=Wage) {
+  sapply(1:max(folds), function(fold) {
+    data$cut <- cut(data$age,cuts)
+    train=data[folds!=fold,]
+    test=data[folds==fold,]
+    fit <- lm(wage ~ cut, data=train)
+    pred.cv <- predict(fit,newdata=test)
+    MSE <- (test$wage-pred.cv)^2 %>% mean()
+    MSE
+  }
+  )
+}
+
+cv.results <- sapply(2:10,fitcut.cv,folds)
+
+cv.results
+
+cv.summary <- tibble(
+  cuts = 2:10,
+  cv.mean = colMeans(cv.results),
+  cv.se = apply(cv.results,2,sd),
+  cv.upper=cv.mean+cv.se,
+  cv.lower=cv.mean-cv.se)
+
+cv.summary
+
+cv.summary %>% ggplot(aes(x=cuts,y=cv.mean,ymax=cv.upper,ymin=cv.lower)) +
+  geom_ribbon(fill="gray85") +
+  geom_point() +
+  geom_line() +
+  ylim(c(0,2100))
+```
+
+Choose 4 cuts; this is where it starts to level off.  Arguably could choose 2 based on the 1SE rule, or 8 based on minimum.
+
+Predict and plot for cuts=4
+
+```{r}
+pred.df <- tibble(age=seq(min(Wage$age),max(Wage$age),by=1))
+pred.df <- cbind(pred.df, predict(fits.cut$fit[[3]], newdata=pred.df, se.fit=TRUE))
+pred.df <- pred.df %>% mutate(upper.95 = fit + 2*se.fit, lower.95 = fit - 2*se.fit)
+```
+
+plot it
+```{r}
+ggplot(pred.df,aes(x=age,y=fit,ymin=lower.95,ymax=upper.95)) +
+  geom_ribbon(fill="gray70") +
+  geom_line(color="red",lwd=2) +
+  geom_point(aes(y=wage,x=age),shape=1,data=Wage,inherit.aes=FALSE) +
+  ylab("wage")
+```
+
+```{r}
+summary(fits.cut$fit[[3]])
+```
 
