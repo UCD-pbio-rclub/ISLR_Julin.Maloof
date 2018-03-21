@@ -3,8 +3,8 @@ title: "Chapter 7"
 author: "Julin N Maloof"
 date: "3/20/2018"
 output: 
-  html_document:
-    keep_md:true
+  html_document: 
+    keep_md: yes
 ---
 
 # Chapter 7
@@ -21,6 +21,7 @@ _(a) Perform polynomial regression to predict wage using age. Use cross-validati
 library(ISLR)
 library(tidyverse)
 library(broom)
+library(splines)
 data(Wage)
 ?Wage
 head(Wage)
@@ -30,7 +31,7 @@ head(Wage)
 ```{r}
 fits.poly <- tibble(degree=1:15)
 fitpoly <- function(degree,data=Wage) {
-  lm(wage ~ poly(age,degree=degree), data=Wage)
+  lm(wage ~ poly(age,degree=degree), data=data)
 }
 fits.poly <- fits.poly %>% mutate(fit=map(degree, fitpoly))
 fits.poly # a column of models...
@@ -191,14 +192,121 @@ fit.cv <- function(folds,data=Wage) {
 
 cv.results <- fit.cv(folds)
 
-cv.results
+cat("MSE: ",mean(cv.results),"\n")
 
-mean(cv.results)
-
-sd(cv.results)
+cat("SE of MSE: ",sd(cv.results),"\n")
 ```
 
 This is a better fit than obtained above.
 
 ### splines
+
+```{r}
+fit3 <- lm(wage ~ ns(age,5) + ns(as.numeric(maritl),4) + ns(as.numeric(race),3) + ns(as.numeric(education),4) ,data=Wage)
+
+summary(fit3)
+```
+
+```{r}
+fit4 <- lm(wage ~ ns(age,2) + ns(as.numeric(maritl),2) + ns(as.numeric(race),1) + ns(as.numeric(education),4) ,data=Wage)
+
+summary(fit4)
+```
+
+cross validation
+```{r}
+
+fit.cv <- function(folds,data=Wage) {
+  sapply(1:max(folds), function(fold) {
+    train=data[folds!=fold,]
+    test=data[folds==fold,]
+    fit <- lm(wage ~ ns(age,2) + ns(as.numeric(maritl),2) + ns(as.numeric(race),1) + ns(as.numeric(education),4) ,data=train)
+    pred.cv <- predict(fit,newdata=test)
+    MSE <- (test$wage-pred.cv)^2 %>% mean()
+    MSE
+  }
+  )
+}
+
+cv.results <- fit.cv(folds)
+
+cat("MSE: ",mean(cv.results),"\n")
+
+cat("SE of MSE: ",sd(cv.results),"\n")
+```
+
+## Q8
+
+## Q9
+
+_This question uses the variables dis (the weighted mean of distances to five Boston employment centers) and nox (nitrogen oxides concentration in parts per 10 million) from the Boston data. We will treat dis as the predictor and nox as the response._
+
+```{r}
+data(Boston,package = "MASS")
+qplot(Boston$dis, Boston$nox)
+```
+
+_(a) Use the poly() function to fit a cubic polynomial regression to predict nox using dis. Report the regression output, and plot the resulting data and polynomial fits._
+
+```{r}
+fit9a <- lm(nox ~ poly(dis,3), data=Boston)
+summary(fit9a)
+dis.grid <- seq(min(Boston$dis), max(Boston$dis), by=0.1)
+pred.9a <- as.data.frame(predict(fit9a, newdata = list(dis=dis.grid),se=TRUE)) %>%
+  select(-df, -residual.scale)
+pred.9a$dis <- dis.grid
+head(pred.9a)
+```
+
+```{r}
+pl <- ggplot(pred.9a,aes(x=dis,y=fit, ymin=fit+se.fit, ymax=fit+se.fit)) +
+  geom_ribbon(fill="gray85") +
+  geom_line(color="blue") +
+  geom_point(aes(x=dis, y=nox), data=Boston, shape=1, inherit.aes = FALSE)
+pl
+```
+
+
+_(b) Plot the polynomial fits for a range of different polynomial degrees (say, from 1 to 10), and report the associated residual sum of squares._
+
+```{r}
+fitpoly <- function(degree,data) {
+  lm(nox ~ poly(dis,degree=degree), data=data)
+}
+
+fits.9b <- tibble(degree=1:10)
+fits.9b <- fits.9b %>% mutate(fit=map(degree,fitpoly,Boston))
+fits.9b %>% mutate(glance=map(fit,glance)) %>% unnest(glance)
+```
+
+```{r, eval=FALSE}
+
+
+
+make.plot <- function(fit) {
+  
+  pred.tmp <- as.data.frame(predict(fit, newdata = list(dis=dis.grid),se=TRUE)) %>%
+  select(-df, -residual.scale)
+pred.tmp$dis <- dis.grid
+  
+  ggplot(pred.tmp,aes(x=dis,y=fit, ymin=fit+se.fit, ymax=fit+se.fit)) +
+  geom_ribbon(fill="gray85") +
+  geom_line(color="blue") +
+  geom_point(aes(x=dis, y=nox), data=Boston, shape=1, inherit.aes = FALSE)
+}
+
+for(i in 1:10) {
+  print(make.plot(fits.9b$fit[[i]]))
+}
+
+```
+
+
+_(c) Perform cross-validation or another approach to select the opti- mal degree for the polynomial, and explain your results._
+
+_(d) Use the bs() function to fit a regression spline to predict nox using dis. Report the output for the fit using four degrees of freedom. How did you choose the knots? Plot the resulting fit._
+
+_(e) Now fit a regression spline for a range of degrees of freedom, and plot the resulting fits and report the resulting RSS. Describe the results obtained._
+
+_(f) Perform cross-validation or another approach in order to select the best degrees of freedom for a regression spline on this data. Describe your results._
 
