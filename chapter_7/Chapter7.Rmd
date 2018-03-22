@@ -259,7 +259,7 @@ head(pred.9a)
 ```
 
 ```{r}
-pl <- ggplot(pred.9a,aes(x=dis,y=fit, ymin=fit+se.fit, ymax=fit+se.fit)) +
+pl <- ggplot(pred.9a,aes(x=dis,y=fit, ymin=fit-se.fit, ymax=fit+se.fit)) +
   geom_ribbon(fill="gray85") +
   geom_line(color="blue") +
   geom_point(aes(x=dis, y=nox), data=Boston, shape=1, inherit.aes = FALSE)
@@ -289,7 +289,7 @@ make.plot <- function(fit) {
   select(-df, -residual.scale)
 pred.tmp$dis <- dis.grid
   
-  ggplot(pred.tmp,aes(x=dis,y=fit, ymin=fit+se.fit, ymax=fit+se.fit)) +
+  ggplot(pred.tmp,aes(x=dis,y=fit, ymin=fit-se.fit, ymax=fit+se.fit)) +
   geom_ribbon(fill="gray85") +
   geom_line(color="blue") +
   geom_point(aes(x=dis, y=nox), data=Boston, shape=1, inherit.aes = FALSE)
@@ -302,7 +302,7 @@ for(i in 1:10) {
 ```
 
 
-_(c) Perform cross-validation or another approach to select the opti- mal degree for the polynomial, and explain your results._
+_(c) Perform cross-validation or another approach to select the optimal degree for the polynomial, and explain your results._
 
 _(d) Use the bs() function to fit a regression spline to predict nox using dis. Report the output for the fit using four degrees of freedom. How did you choose the knots? Plot the resulting fit._
 
