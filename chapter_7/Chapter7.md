@@ -24,7 +24,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ───────────────
+## ── Attaching packages ─────────── tidyverse 1.2.1 ──
 ```
 
 ```
@@ -35,7 +35,7 @@ library(tidyverse)
 ```
 
 ```
-## ── Conflicts ────────────────────────
+## ── Conflicts ────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ```
@@ -43,6 +43,49 @@ library(tidyverse)
 ```r
 library(broom)
 library(splines)
+library(gam)
+```
+
+```
+## Warning: package 'gam' was built under R version 3.4.3
+```
+
+```
+## Loading required package: foreach
+```
+
+```
+## 
+## Attaching package: 'foreach'
+```
+
+```
+## The following objects are masked from 'package:purrr':
+## 
+##     accumulate, when
+```
+
+```
+## Loaded gam 1.15
+```
+
+```r
+library(leaps)
+library(GGally)
+```
+
+```
+## 
+## Attaching package: 'GGally'
+```
+
+```
+## The following object is masked from 'package:dplyr':
+## 
+##     nasa
+```
+
+```r
 data(Wage)
 ?Wage
 head(Wage)
@@ -277,27 +320,27 @@ cv.results
 
 ```
 ##           [,1]     [,2]     [,3]     [,4]     [,5]     [,6]     [,7]
-##  [1,] 1431.316 1341.648 1321.956 1304.142 1286.802 1277.559 1278.968
-##  [2,] 2040.869 1921.846 1881.848 1886.873 1865.921 1825.190 1839.444
-##  [3,] 1623.268 1581.385 1532.894 1541.318 1522.347 1513.095 1501.590
-##  [4,] 1533.603 1509.260 1476.735 1479.514 1467.037 1445.835 1419.881
-##  [5,] 1301.497 1272.626 1259.147 1252.620 1256.081 1271.005 1247.255
-##  [6,] 1870.233 1838.715 1767.001 1775.384 1785.448 1731.023 1744.621
-##  [7,] 1706.821 1676.212 1601.685 1598.978 1599.532 1607.851 1587.205
-##  [8,] 1503.915 1429.316 1414.606 1425.466 1394.663 1395.325 1378.851
-##  [9,] 1952.830 1923.496 1862.346 1828.985 1833.485 1818.052 1798.887
-## [10,] 2418.526 2375.542 2282.880 2266.314 2263.881 2272.453 2262.690
+##  [1,] 2227.187 2180.587 2157.862 2156.238 2134.408 2130.717 2119.198
+##  [2,] 1721.405 1686.031 1642.313 1606.651 1575.901 1605.800 1593.708
+##  [3,] 1887.599 1857.279 1792.802 1788.249 1783.986 1775.277 1756.430
+##  [4,] 1991.249 1878.784 1788.659 1747.084 1739.350 1739.044 1714.091
+##  [5,] 1605.441 1565.541 1515.941 1537.630 1511.071 1486.092 1471.660
+##  [6,] 1314.894 1277.048 1231.016 1231.790 1249.480 1225.672 1252.149
+##  [7,] 1808.613 1770.937 1757.821 1739.109 1743.502 1725.753 1741.876
+##  [8,] 1870.421 1802.136 1763.236 1754.058 1762.329 1730.115 1693.527
+##  [9,] 1462.778 1419.835 1375.113 1381.202 1362.952 1351.522 1348.821
+## [10,] 1520.364 1454.991 1405.875 1436.545 1439.519 1405.874 1386.870
 ##           [,8]     [,9]
-##  [1,] 1271.400 1259.280
-##  [2,] 1848.371 1832.378
-##  [3,] 1509.996 1506.252
-##  [4,] 1440.123 1438.112
-##  [5,] 1252.819 1257.409
-##  [6,] 1765.020 1744.103
-##  [7,] 1603.040 1597.576
-##  [8,] 1413.861 1402.167
-##  [9,] 1797.301 1813.432
-## [10,] 2237.850 2238.377
+##  [1,] 2134.967 2129.515
+##  [2,] 1583.569 1579.578
+##  [3,] 1763.325 1770.647
+##  [4,] 1722.836 1716.169
+##  [5,] 1510.576 1493.142
+##  [6,] 1244.502 1225.855
+##  [7,] 1727.116 1724.634
+##  [8,] 1707.963 1715.060
+##  [9,] 1346.430 1351.749
+## [10,] 1413.854 1409.031
 ```
 
 ```r
@@ -315,15 +358,15 @@ cv.summary
 ## # A tibble: 9 x 5
 ##    cuts  cv.mean    cv.se cv.upper cv.lower
 ##   <int>    <dbl>    <dbl>    <dbl>    <dbl>
-## 1     2 1738.288 335.6223 2073.910 1402.665
-## 2     3 1687.004 334.7349 2021.739 1352.270
-## 3     4 1640.110 311.6177 1951.727 1328.492
-## 4     5 1635.959 307.8893 1943.849 1328.070
-## 5     6 1627.520 311.8104 1939.330 1315.709
-## 6     7 1615.739 307.4300 1923.169 1308.309
-## 7     8 1605.939 311.8580 1917.797 1294.081
-## 8     9 1613.978 303.6038 1917.582 1310.374
-## 9    10 1608.909 304.5305 1913.439 1304.378
+## 1     2 1740.995 272.4843 2013.479 1468.511
+## 2     3 1689.317 266.1811 1955.498 1423.136
+## 3     4 1643.064 268.7932 1911.857 1374.271
+## 4     5 1637.855 260.1986 1898.054 1377.657
+## 5     6 1630.250 256.0283 1886.278 1374.222
+## 6     7 1617.587 261.1775 1878.764 1356.409
+## 7     8 1607.833 254.1525 1861.985 1353.680
+## 8     9 1615.514 255.3766 1870.890 1360.137
+## 9    10 1611.538 258.2764 1869.814 1353.262
 ```
 
 ```r
@@ -511,7 +554,7 @@ cat("MSE: ",mean(cv.results),"\n")
 ```
 
 ```
-## MSE:  1217.572
+## MSE:  1219.589
 ```
 
 ```r
@@ -519,7 +562,7 @@ cat("SE of MSE: ",sd(cv.results),"\n")
 ```
 
 ```
-## SE of MSE:  207.8934
+## SE of MSE:  245.7918
 ```
 
 This is a better fit than obtained above.
@@ -628,7 +671,7 @@ cat("MSE: ",mean(cv.results),"\n")
 ```
 
 ```
-## MSE:  1225.236
+## MSE:  1227.102
 ```
 
 ```r
@@ -636,8 +679,121 @@ cat("SE of MSE: ",sd(cv.results),"\n")
 ```
 
 ```
-## SE of MSE:  207.5579
+## SE of MSE:  244.2623
 ```
+
+Now that I have read more of the book it is clear that the above several fits were general additive models.  Let's try again, using the GAM function
+
+
+```r
+gam1 <- gam(wage ~ s(age,df=7) + education + maritl + race, data=Wage)
+summary(gam1)
+```
+
+```
+## 
+## Call: gam(formula = wage ~ s(age, df = 7) + education + maritl + race, 
+##     data = Wage)
+## Deviance Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -117.151  -19.340   -2.919   14.156  215.712 
+## 
+## (Dispersion Parameter for gaussian family taken to be 1210.274)
+## 
+##     Null Deviance: 5222086 on 2999 degrees of freedom
+## Residual Deviance: 3607827 on 2981 degrees of freedom
+## AIC: 29830.38 
+## 
+## Number of Local Scoring Iterations: 2 
+## 
+## Anova for Parametric Effects
+##                  Df  Sum Sq Mean Sq  F value  Pr(>F)    
+## s(age, df = 7)    1  199870  199870 165.1442 < 2e-16 ***
+## education         4 1092399  273100 225.6511 < 2e-16 ***
+## maritl            4  101776   25444  21.0234 < 2e-16 ***
+## race              3    7866    2622   2.1666 0.08991 .  
+## Residuals      2981 3607827    1210                     
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Anova for Nonparametric Effects
+##                Npar Df Npar F     Pr(F)    
+## (Intercept)                                
+## s(age, df = 7)       6 12.223 1.255e-13 ***
+## education                                  
+## maritl                                     
+## race                                       
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+gam2 <- gam(wage ~ s(age,df=7) + education + maritl, data=Wage)
+summary(gam2)
+```
+
+```
+## 
+## Call: gam(formula = wage ~ s(age, df = 7) + education + maritl, data = Wage)
+## Deviance Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -116.41  -19.23   -3.02   14.10  212.17 
+## 
+## (Dispersion Parameter for gaussian family taken to be 1211.664)
+## 
+##     Null Deviance: 5222086 on 2999 degrees of freedom
+## Residual Deviance: 3615606 on 2984 degrees of freedom
+## AIC: 29830.84 
+## 
+## Number of Local Scoring Iterations: 2 
+## 
+## Anova for Parametric Effects
+##                  Df  Sum Sq Mean Sq F value    Pr(>F)    
+## s(age, df = 7)    1  199870  199870 164.955 < 2.2e-16 ***
+## education         4 1092544  273136 225.422 < 2.2e-16 ***
+## maritl            4  101647   25412  20.973 < 2.2e-16 ***
+## Residuals      2984 3615606    1212                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Anova for Nonparametric Effects
+##                Npar Df Npar F     Pr(F)    
+## (Intercept)                                
+## s(age, df = 7)       6 12.418 7.305e-14 ***
+## education                                  
+## maritl                                     
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+anova(gam1,gam2)
+```
+
+```
+## Analysis of Deviance Table
+## 
+## Model 1: wage ~ s(age, df = 7) + education + maritl + race
+## Model 2: wage ~ s(age, df = 7) + education + maritl
+##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+## 1      2981    3607827                       
+## 2      2984    3615606 -3  -7779.1  0.09256 .
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+op <- par(mfrow=c(1,3))
+plot(gam2,se=TRUE)
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
+```r
+par(op)
+```
+
+
 
 ## Q8
 
@@ -651,7 +807,7 @@ data(Boston,package = "MASS")
 qplot(Boston$dis, Boston$nox)
 ```
 
-![](Chapter7_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+![](Chapter7_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
 
 _(a) Use the poly() function to fit a cubic polynomial regression to predict nox using dis. Report the regression output, and plot the resulting data and polynomial fits._
 
@@ -711,7 +867,7 @@ pl <- ggplot(pred.9a,aes(x=dis,y=fit, ymin=fit-se.fit, ymax=fit+se.fit)) +
 pl
 ```
 
-![](Chapter7_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](Chapter7_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
 
 
 _(b) Plot the polynomial fits for a range of different polynomial degrees (say, from 1 to 10), and report the associated residual sum of squares._
@@ -773,3 +929,435 @@ _(e) Now fit a regression spline for a range of degrees of freedom, and plot the
 
 _(f) Perform cross-validation or another approach in order to select the best degrees of freedom for a regression spline on this data. Describe your results._
 
+## Q 10
+
+_This question relates to the College data set._
+
+_(a) Split the data into a training set and a test set. Using out-of-state tuition as the response and the other variables as the predictors, perform forward stepwise selection on the training set in order to identify a satisfactory model that uses just a subset of the predictors._
+
+
+```r
+data(College)
+college <- as_tibble(College)
+college
+```
+
+```
+## # A tibble: 777 x 18
+##    Private  Apps Accept Enroll Top10perc Top25perc F.Undergrad P.Undergrad
+##  *  <fctr> <dbl>  <dbl>  <dbl>     <dbl>     <dbl>       <dbl>       <dbl>
+##  1     Yes  1660   1232    721        23        52        2885         537
+##  2     Yes  2186   1924    512        16        29        2683        1227
+##  3     Yes  1428   1097    336        22        50        1036          99
+##  4     Yes   417    349    137        60        89         510          63
+##  5     Yes   193    146     55        16        44         249         869
+##  6     Yes   587    479    158        38        62         678          41
+##  7     Yes   353    340    103        17        45         416         230
+##  8     Yes  1899   1720    489        37        68        1594          32
+##  9     Yes  1038    839    227        30        63         973         306
+## 10     Yes   582    498    172        21        44         799          78
+## # ... with 767 more rows, and 10 more variables: Outstate <dbl>,
+## #   Room.Board <dbl>, Books <dbl>, Personal <dbl>, PhD <dbl>,
+## #   Terminal <dbl>, S.F.Ratio <dbl>, perc.alumni <dbl>, Expend <dbl>,
+## #   Grad.Rate <dbl>
+```
+
+```r
+set.seed(123)
+train.vector <- sample(c(TRUE,FALSE),nrow(college),replace = TRUE)
+college.train <- college %>% filter(train.vector)
+college.test <- college %>% filter(!train.vector)
+```
+
+
+```r
+fs1 <- regsubsets(Outstate ~ ., data=college.train, nvmax=17, method = "forward")
+(fs1.sum <- summary(fs1))
+```
+
+```
+## Subset selection object
+## Call: regsubsets.formula(Outstate ~ ., data = college.train, nvmax = 17, 
+##     method = "forward")
+## 17 Variables  (and intercept)
+##             Forced in Forced out
+## PrivateYes      FALSE      FALSE
+## Apps            FALSE      FALSE
+## Accept          FALSE      FALSE
+## Enroll          FALSE      FALSE
+## Top10perc       FALSE      FALSE
+## Top25perc       FALSE      FALSE
+## F.Undergrad     FALSE      FALSE
+## P.Undergrad     FALSE      FALSE
+## Room.Board      FALSE      FALSE
+## Books           FALSE      FALSE
+## Personal        FALSE      FALSE
+## PhD             FALSE      FALSE
+## Terminal        FALSE      FALSE
+## S.F.Ratio       FALSE      FALSE
+## perc.alumni     FALSE      FALSE
+## Expend          FALSE      FALSE
+## Grad.Rate       FALSE      FALSE
+## 1 subsets of each size up to 17
+## Selection Algorithm: forward
+##           PrivateYes Apps Accept Enroll Top10perc Top25perc F.Undergrad
+## 1  ( 1 )  " "        " "  " "    " "    " "       " "       " "        
+## 2  ( 1 )  "*"        " "  " "    " "    " "       " "       " "        
+## 3  ( 1 )  "*"        " "  " "    " "    " "       " "       " "        
+## 4  ( 1 )  "*"        " "  " "    " "    " "       " "       " "        
+## 5  ( 1 )  "*"        " "  " "    " "    " "       " "       " "        
+## 6  ( 1 )  "*"        " "  " "    " "    " "       " "       " "        
+## 7  ( 1 )  "*"        " "  " "    " "    " "       "*"       " "        
+## 8  ( 1 )  "*"        " "  " "    " "    " "       "*"       " "        
+## 9  ( 1 )  "*"        " "  " "    " "    " "       "*"       " "        
+## 10  ( 1 ) "*"        " "  " "    " "    " "       "*"       " "        
+## 11  ( 1 ) "*"        " "  " "    " "    " "       "*"       "*"        
+## 12  ( 1 ) "*"        " "  "*"    " "    " "       "*"       "*"        
+## 13  ( 1 ) "*"        "*"  "*"    " "    " "       "*"       "*"        
+## 14  ( 1 ) "*"        "*"  "*"    " "    "*"       "*"       "*"        
+## 15  ( 1 ) "*"        "*"  "*"    "*"    "*"       "*"       "*"        
+## 16  ( 1 ) "*"        "*"  "*"    "*"    "*"       "*"       "*"        
+## 17  ( 1 ) "*"        "*"  "*"    "*"    "*"       "*"       "*"        
+##           P.Undergrad Room.Board Books Personal PhD Terminal S.F.Ratio
+## 1  ( 1 )  " "         " "        " "   " "      " " " "      " "      
+## 2  ( 1 )  " "         " "        " "   " "      " " " "      " "      
+## 3  ( 1 )  " "         "*"        " "   " "      " " " "      " "      
+## 4  ( 1 )  " "         "*"        " "   " "      " " " "      " "      
+## 5  ( 1 )  " "         "*"        " "   " "      "*" " "      " "      
+## 6  ( 1 )  " "         "*"        " "   "*"      "*" " "      " "      
+## 7  ( 1 )  " "         "*"        " "   "*"      "*" " "      " "      
+## 8  ( 1 )  " "         "*"        " "   "*"      "*" " "      " "      
+## 9  ( 1 )  " "         "*"        " "   "*"      "*" " "      "*"      
+## 10  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 11  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 12  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 13  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 14  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 15  ( 1 ) " "         "*"        " "   "*"      "*" "*"      "*"      
+## 16  ( 1 ) " "         "*"        "*"   "*"      "*" "*"      "*"      
+## 17  ( 1 ) "*"         "*"        "*"   "*"      "*" "*"      "*"      
+##           perc.alumni Expend Grad.Rate
+## 1  ( 1 )  " "         "*"    " "      
+## 2  ( 1 )  " "         "*"    " "      
+## 3  ( 1 )  " "         "*"    " "      
+## 4  ( 1 )  "*"         "*"    " "      
+## 5  ( 1 )  "*"         "*"    " "      
+## 6  ( 1 )  "*"         "*"    " "      
+## 7  ( 1 )  "*"         "*"    " "      
+## 8  ( 1 )  "*"         "*"    "*"      
+## 9  ( 1 )  "*"         "*"    "*"      
+## 10  ( 1 ) "*"         "*"    "*"      
+## 11  ( 1 ) "*"         "*"    "*"      
+## 12  ( 1 ) "*"         "*"    "*"      
+## 13  ( 1 ) "*"         "*"    "*"      
+## 14  ( 1 ) "*"         "*"    "*"      
+## 15  ( 1 ) "*"         "*"    "*"      
+## 16  ( 1 ) "*"         "*"    "*"      
+## 17  ( 1 ) "*"         "*"    "*"
+```
+
+```r
+plot(fs1)
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
+
+
+```r
+fs.plot.frame <- tibble(predictors=1:17,fs1.sum$rsq, fs1.sum$adjr2, fs1.sum$cp, fs1.sum$bic) %>%
+  gather(key="criterion",value="value",-predictors)
+fs.plot.frame %>% ggplot(aes(x=predictors,y=value)) +
+  geom_line() +
+  facet_wrap(~criterion,scales="free_y")
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
+
+Could argue either for 5 or 12...
+
+Look at Cross Validation
+
+
+```r
+#From ISLR book
+predict.regsubsets  <- function (object ,newdata ,id ,...){
+ form=as.formula(object$call [[2]])
+ mat=model.matrix(form,newdata)
+ coefi=coef(object ,id=id)
+ xvars=names(coefi)
+ mat[,xvars]%*%coefi}
+```
+
+create folds
+
+```r
+k <- 10
+set.seed(1)
+folds <- sample(1:k,nrow(college.train),replace=TRUE)
+cv.errors <- matrix(NA,k,17, dimnames=list(NULL, paste(1:17)))
+```
+
+test the folds
+
+```r
+for(j in 1:k){
+  best.fit <- regsubsets(Outstate ~ . , data=college.train[folds!=j,],nvmax = 17)
+  for(i in 1:17) {
+    pred=predict(best.fit, college.train[folds==j,],id=i)
+    cv.errors[j,i] <- mean( (college.train$Outstate[folds==j]-pred)^2)
+  } 
+}
+```
+
+check the CV MSE
+
+```r
+(mean.cv.errors <- apply(cv.errors ,2,weighted.mean,table(folds)))
+```
+
+```
+##       1       2       3       4       5       6       7       8       9 
+## 9478606 6966789 5979198 5661782 5078555 5570734 4744426 4605837 4670148 
+##      10      11      12      13      14      15      16      17 
+## 4765625 4726175 4709469 4693366 4653812 4635947 4638714 4640661
+```
+
+```r
+(sd.cv.errors <- apply(cv.errors, 2, sd))
+```
+
+```
+##       1       2       3       4       5       6       7       8       9 
+## 3471442 2857617 2025694 1635823 1354354 1732946 1431666 1491845 1675270 
+##      10      11      12      13      14      15      16      17 
+## 1744231 1771505 1827067 1784657 1769429 1715054 1727638 1729646
+```
+
+```r
+plot(mean.cv.errors, type='b',ylim=range(c(mean.cv.errors+sd.cv.errors,mean.cv.errors-sd.cv.errors)))
+arrows(1:17,mean.cv.errors+sd.cv.errors,1:17,mean.cv.errors-sd.cv.errors,angle = 90, code=3,length = .1)
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-33-1.png)<!-- -->
+
+```r
+which.min(mean.cv.errors)
+```
+
+```
+## 8 
+## 8
+```
+
+```r
+mean.cv.errors < mean.cv.errors[16] + sd.cv.errors[16]
+```
+
+```
+##     1     2     3     4     5     6     7     8     9    10    11    12 
+## FALSE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE 
+##    13    14    15    16    17 
+##  TRUE  TRUE  TRUE  TRUE  TRUE
+```
+
+So...if we use minimum CV then we chose 8.  If we use the 1SE rule then we choose 3.  However, from the plots I am going to use 5 because this really where it seems to plateau.
+
+Which variables are included?
+
+```r
+fs1.sum$which[5,]
+```
+
+```
+## (Intercept)  PrivateYes        Apps      Accept      Enroll   Top10perc 
+##        TRUE        TRUE       FALSE       FALSE       FALSE       FALSE 
+##   Top25perc F.Undergrad P.Undergrad  Room.Board       Books    Personal 
+##       FALSE       FALSE       FALSE        TRUE       FALSE       FALSE 
+##         PhD    Terminal   S.F.Ratio perc.alumni      Expend   Grad.Rate 
+##        TRUE       FALSE       FALSE        TRUE        TRUE       FALSE
+```
+
+```r
+(variables <- colnames(fs1.sum$which)[fs1.sum$which[5,]][-1] %>% str_replace("Yes",""))
+```
+
+```
+## [1] "Private"     "Room.Board"  "PhD"         "perc.alumni" "Expend"
+```
+
+
+_(b) Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in the previous step as the predictors. Plot the results, and explain your findings._
+
+
+```r
+college[,c("Outstate",variables)] %>% pairs()
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-36-1.png)<!-- -->
+
+Looks like relationships with possibly Room.Board, PhD, and Expend could be non linear.
+
+
+```r
+gam1 <- gam(Outstate ~ Private + lo(Room.Board) + lo(PhD) + perc.alumni + lo(Expend), data=college.train)
+summary(gam1)
+```
+
+```
+## 
+## Call: gam(formula = Outstate ~ Private + lo(Room.Board) + lo(PhD) + 
+##     perc.alumni + lo(Expend), data = college.train)
+## Deviance Residuals:
+##    Min     1Q Median     3Q    Max 
+##  -8254  -1072     79   1190   7526 
+## 
+## (Dispersion Parameter for gaussian family taken to be 3882635)
+## 
+##     Null Deviance: 6244712701 on 396 degrees of freedom
+## Residual Deviance: 1479592833 on 381.0796 degrees of freedom
+## AIC: 7167.523 
+## 
+## Number of Local Scoring Iterations: 2 
+## 
+## Anova for Parametric Effects
+##                    Df     Sum Sq    Mean Sq F value    Pr(>F)    
+## Private          1.00 1639690723 1639690723 422.314 < 2.2e-16 ***
+## lo(Room.Board)   1.00 1176844322 1176844322 303.105 < 2.2e-16 ***
+## lo(PhD)          1.00  406715879  406715879 104.752 < 2.2e-16 ***
+## perc.alumni      1.00  243746407  243746407  62.779 2.571e-14 ***
+## lo(Expend)       1.00  453919876  453919876 116.910 < 2.2e-16 ***
+## Residuals      381.08 1479592833    3882635                      
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Anova for Nonparametric Effects
+##                Npar Df  Npar F     Pr(F)    
+## (Intercept)                                 
+## Private                                     
+## lo(Room.Board)     3.1  1.7365    0.1579    
+## lo(PhD)            2.7  1.6966    0.1733    
+## perc.alumni                                 
+## lo(Expend)         4.2 17.9881 4.774e-14 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+```
+
+```r
+plot(gam1,se=TRUE)
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-37-1.png)<!-- -->![](Chapter7_files/figure-html/unnamed-chunk-37-2.png)<!-- -->![](Chapter7_files/figure-html/unnamed-chunk-37-3.png)<!-- -->![](Chapter7_files/figure-html/unnamed-chunk-37-4.png)<!-- -->![](Chapter7_files/figure-html/unnamed-chunk-37-5.png)<!-- -->
+
+
+_(c) Evaluate the model obtained on the test set, and explain the results obtained._
+
+
+```r
+college.predictions <- predict(gam1,newdata = college.test)
+```
+
+```
+## Warning in gam.lo(data[["lo(Room.Board)"]], z, w, span = 0.5, degree = 1, :
+## eval 1780
+```
+
+```
+## Warning in gam.lo(data[["lo(Room.Board)"]], z, w, span = 0.5, degree = 1, :
+## lowerlimit 1848.8
+```
+
+```
+## Warning in gam.lo(data[["lo(Room.Board)"]], z, w, span = 0.5, degree = 1, :
+## extrapolation not allowed with blending
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : eval 8
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : lowerlimit 9.55
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : extrapolation not allowed with blending
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : eval 103
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : upperlimit 100.45
+```
+
+```
+## Warning in gam.lo(data[["lo(PhD)"]], z, w, span = 0.5, degree = 1, ncols =
+## 1, : extrapolation not allowed with blending
+```
+
+```
+## Warning in gam.lo(data[["lo(Expend)"]], z, w, span = 0.5, degree = 1, ncols
+## = 1, : eval 3186
+```
+
+```
+## Warning in gam.lo(data[["lo(Expend)"]], z, w, span = 0.5, degree = 1, ncols
+## = 1, : lowerlimit 3216.2
+```
+
+```
+## Warning in gam.lo(data[["lo(Expend)"]], z, w, span = 0.5, degree = 1, ncols
+## = 1, : extrapolation not allowed with blending
+```
+
+```r
+MSE <- mean((college.test$Outstate-college.predictions)^2)
+MSE
+```
+
+```
+## [1] 3472147
+```
+
+```r
+sqrt(MSE)
+```
+
+```
+## [1] 1863.37
+```
+
+```r
+plot(college.test$Outstate,college.predictions)
+abline(coef(gam1)[1],1)
+```
+
+![](Chapter7_files/figure-html/unnamed-chunk-38-1.png)<!-- -->
+
+```r
+cor(college.test$Outstate,college.predictions)
+```
+
+```
+## [1] 0.8904812
+```
+
+```r
+cor(college.test$Outstate,college.predictions)^2
+```
+
+```
+## [1] 0.7929567
+```
+
+The model does a nice job, prediction 79% of the variation in the test set.  
+
+_(d) For which variables, if any, is there evidence of a non-linear relationship with the response?_
+
+According to the summary(gam1) the only variable with a non-linear relationship is `Expend`

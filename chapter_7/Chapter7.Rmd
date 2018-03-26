@@ -22,6 +22,9 @@ library(ISLR)
 library(tidyverse)
 library(broom)
 library(splines)
+library(gam)
+library(leaps)
+library(GGally)
 data(Wage)
 ?Wage
 head(Wage)
@@ -235,6 +238,21 @@ cat("MSE: ",mean(cv.results),"\n")
 cat("SE of MSE: ",sd(cv.results),"\n")
 ```
 
+Now that I have read more of the book it is clear that the above several fits were general additive models.  Let's try again, using the GAM function
+
+```{r}
+gam1 <- gam(wage ~ s(age,df=7) + education + maritl + race, data=Wage)
+summary(gam1)
+gam2 <- gam(wage ~ s(age,df=7) + education + maritl, data=Wage)
+summary(gam2)
+anova(gam1,gam2)
+op <- par(mfrow=c(1,3))
+plot(gam2,se=TRUE)
+par(op)
+```
+
+
+
 ## Q8
 
 ## Q9
@@ -310,3 +328,120 @@ _(e) Now fit a regression spline for a range of degrees of freedom, and plot the
 
 _(f) Perform cross-validation or another approach in order to select the best degrees of freedom for a regression spline on this data. Describe your results._
 
+## Q 10
+
+_This question relates to the College data set._
+
+_(a) Split the data into a training set and a test set. Using out-of-state tuition as the response and the other variables as the predictors, perform forward stepwise selection on the training set in order to identify a satisfactory model that uses just a subset of the predictors._
+
+```{r}
+data(College)
+college <- as_tibble(College)
+college
+set.seed(123)
+train.vector <- sample(c(TRUE,FALSE),nrow(college),replace = TRUE)
+college.train <- college %>% filter(train.vector)
+college.test <- college %>% filter(!train.vector)
+```
+
+```{r}
+fs1 <- regsubsets(Outstate ~ ., data=college.train, nvmax=17, method = "forward")
+(fs1.sum <- summary(fs1))
+plot(fs1)
+```
+
+```{r}
+fs.plot.frame <- tibble(predictors=1:17,fs1.sum$rsq, fs1.sum$adjr2, fs1.sum$cp, fs1.sum$bic) %>%
+  gather(key="criterion",value="value",-predictors)
+fs.plot.frame %>% ggplot(aes(x=predictors,y=value)) +
+  geom_line() +
+  facet_wrap(~criterion,scales="free_y")
+```
+
+Could argue either for 5 or 12...
+
+Look at Cross Validation
+
+```{r}
+#From ISLR book
+predict.regsubsets  <- function (object ,newdata ,id ,...){
+ form=as.formula(object$call [[2]])
+ mat=model.matrix(form,newdata)
+ coefi=coef(object ,id=id)
+ xvars=names(coefi)
+ mat[,xvars]%*%coefi}
+```
+
+create folds
+```{r}
+k <- 10
+set.seed(1)
+folds <- sample(1:k,nrow(college.train),replace=TRUE)
+cv.errors <- matrix(NA,k,17, dimnames=list(NULL, paste(1:17)))
+```
+
+test the folds
+```{r}
+for(j in 1:k){
+  best.fit <- regsubsets(Outstate ~ . , data=college.train[folds!=j,],nvmax = 17)
+  for(i in 1:17) {
+    pred=predict(best.fit, college.train[folds==j,],id=i)
+    cv.errors[j,i] <- mean( (college.train$Outstate[folds==j]-pred)^2)
+  } 
+}
+```
+
+check the CV MSE
+```{r}
+(mean.cv.errors <- apply(cv.errors ,2,weighted.mean,table(folds)))
+(sd.cv.errors <- apply(cv.errors, 2, sd))
+plot(mean.cv.errors, type='b',ylim=range(c(mean.cv.errors+sd.cv.errors,mean.cv.errors-sd.cv.errors)))
+arrows(1:17,mean.cv.errors+sd.cv.errors,1:17,mean.cv.errors-sd.cv.errors,angle = 90, code=3,length = .1)
+```
+```{r}
+which.min(mean.cv.errors)
+mean.cv.errors < mean.cv.errors[16] + sd.cv.errors[16]
+```
+
+So...if we use minimum CV then we chose 8.  If we use the 1SE rule then we choose 3.  However, from the plots I am going to use 5 because this really where it seems to plateau.
+
+Which variables are included?
+```{r}
+fs1.sum$which[5,]
+(variables <- colnames(fs1.sum$which)[fs1.sum$which[5,]][-1] %>% str_replace("Yes",""))
+```
+
+
+_(b) Fit a GAM on the training data, using out-of-state tuition as the response and the features selected in the previous step as the predictors. Plot the results, and explain your findings._
+
+```{r}
+college[,c("Outstate",variables)] %>% pairs()
+```
+
+Looks like relationships with possibly Room.Board, PhD, and Expend could be non linear.
+
+```{r}
+gam1 <- gam(Outstate ~ Private + lo(Room.Board) + lo(PhD) + perc.alumni + lo(Expend), data=college.train)
+summary(gam1)
+plot(gam1,se=TRUE)
+```
+
+
+_(c) Evaluate the model obtained on the test set, and explain the results obtained._
+
+```{r}
+college.predictions <- predict(gam1,newdata = college.test)
+MSE <- mean((college.test$Outstate-college.predictions)^2)
+MSE
+sqrt(MSE)
+plot(college.test$Outstate,college.predictions)
+abline(coef(gam1)[1],1)
+cor(college.test$Outstate,college.predictions)
+cor(college.test$Outstate,college.predictions)^2
+```
+
+The model does a nice job, prediction 79% of the variation in the test set.  
+
+_(d) For which variables, if any, is there evidence of a non-linear relationship with the response?_
+
+According to the summary(gam1) the only variable with a non-linear relationship is `Expend`
