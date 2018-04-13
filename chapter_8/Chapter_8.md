@@ -86,12 +86,47 @@ library(gbm)
 ## Loaded gbm 2.1.3
 ```
 
-5
-7
-8 d,e
-10
-11
-12
+```r
+library(glmnet)
+```
+
+```
+## Loading required package: Matrix
+```
+
+```
+## 
+## Attaching package: 'Matrix'
+```
+
+```
+## The following object is masked from 'package:tidyr':
+## 
+##     expand
+```
+
+```
+## Loading required package: foreach
+```
+
+```
+## 
+## Attaching package: 'foreach'
+```
+
+```
+## The following objects are masked from 'package:purrr':
+## 
+##     accumulate, when
+```
+
+```
+## Loaded glmnet 2.0-13
+```
+
+```r
+library(class)
+```
 
 ## Q1
 
@@ -815,9 +850,11 @@ hitters.gbm <- lapply(lambdas, function(l) {
 }
 )
 
-train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
+names(hitters.gbm) <- lambdas
 
-plot(lambdas,train.mse,type="b")
+gbm.train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
+
+plot(lambdas,gbm.train.mse,type="b")
 ```
 
 ![](Chapter_8_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
@@ -826,21 +863,613 @@ _(d) Produce a plot with different shrinkage values on the x-axis and the corres
 
 
 ```r
-test.mse <- sapply(hitters.gbm, function(f) {
+gbm.test.mse <- sapply(hitters.gbm, function(f) {
   mean( (predict(f,newdata=hitters.test,n.trees=1000)-hitters.test$Salary)^2)
 }
 )
 
-plot(lambdas,test.mse,type="b")
+plot(lambdas,gbm.test.mse,type="b")
 ```
 
 ![](Chapter_8_files/figure-html/unnamed-chunk-30-1.png)<!-- -->
 
+The best lambda in this case seems to be 0.10
+
+
+```r
+hitters.gbm.best <- hitters.gbm[["0.1"]]
+gbm.best.predict <- predict(hitters.gbm.best,newdata=hitters.test,n.trees=1000)
+cat("gbm MSE: ")
+```
+
+```
+## gbm MSE:
+```
+
+```r
+(hitters.gbm.mse <- mean( (gbm.best.predict-hitters.test$Salary)^2))
+```
+
+```
+## [1] 0.2784941
+```
+
+```r
+cat("gbm R2: ")
+```
+
+```
+## gbm R2:
+```
+
+```r
+(hitters.gbm.R2 <- cor(gbm.best.predict,hitters.test$Salary)^2)
+```
+
+```
+## [1] 0.5962744
+```
+
 
 _(e) Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches seen in Chapters 3 and 6._
 
+First just try multiple regression
+
+
+```r
+mse.R2 <- function(object,newdata) {
+  observed <- rlang::f_lhs(formula(object)) %>% 
+    as.character() %>%
+    get(newdata)
+  
+  predicted <- predict(object,newdata=newdata)
+  
+  mse <- mean( (observed-predicted)^2)
+  R2 <- cor(observed,predicted)^2
+  
+  return(list(mse=mse,R2=R2))
+  }
+
+hitters.lm <- lm(Salary ~ ., data=hitters.train)
+summary(hitters.lm)
+```
+
+```
+## 
+## Call:
+## lm(formula = Salary ~ ., data = hitters.train)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.44628 -0.43844  0.02835  0.39266  2.83081 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  4.4531779  0.1953605  22.795  < 2e-16 ***
+## AtBat       -0.0041511  0.0015441  -2.688 0.007852 ** 
+## Hits         0.0189964  0.0054505   3.485 0.000618 ***
+## HmRun        0.0094426  0.0134247   0.703 0.482728    
+## Runs        -0.0029961  0.0067142  -0.446 0.655968    
+## RBI         -0.0026030  0.0056677  -0.459 0.646590    
+## Walks        0.0113452  0.0039819   2.849 0.004894 ** 
+## Years        0.0686664  0.0259832   2.643 0.008949 ** 
+## CAtBat       0.0001479  0.0002850   0.519 0.604507    
+## CHits       -0.0012085  0.0014250  -0.848 0.397515    
+## CHmRun       0.0004085  0.0034671   0.118 0.906335    
+## CRuns        0.0025268  0.0016188   1.561 0.120299    
+## CRBI         0.0003625  0.0014589   0.248 0.804062    
+## CWalks      -0.0016141  0.0006971  -2.316 0.021712 *  
+## LeagueN      0.1487966  0.1654780   0.899 0.369751    
+## DivisionW   -0.1359398  0.0880186  -1.544 0.124237    
+## PutOuts      0.0005631  0.0001856   3.034 0.002770 ** 
+## Assists      0.0008936  0.0005092   1.755 0.080969 .  
+## Errors      -0.0099497  0.0100046  -0.995 0.321308    
+## NewLeagueN  -0.0315309  0.1655198  -0.190 0.849135    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.5966 on 180 degrees of freedom
+## Multiple R-squared:  0.6149,	Adjusted R-squared:  0.5743 
+## F-statistic: 15.13 on 19 and 180 DF,  p-value: < 2.2e-16
+```
+
+```r
+hitters.lm1 <- lm(Salary ~ AtBat + Hits + Walks + Years + CWalks + PutOuts + Assists, data = hitters.train)
+summary(hitters.lm1)
+```
+
+```
+## 
+## Call:
+## lm(formula = Salary ~ AtBat + Hits + Walks + Years + CWalks + 
+##     PutOuts + Assists, data = hitters.train)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.3922 -0.4601 -0.0601  0.4241  3.1771 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  4.2570351  0.1593809  26.710  < 2e-16 ***
+## AtBat       -0.0034505  0.0013319  -2.591  0.01031 *  
+## Hits         0.0176725  0.0040593   4.354 2.18e-05 ***
+## Walks        0.0078510  0.0032758   2.397  0.01750 *  
+## Years        0.0855157  0.0182500   4.686 5.27e-06 ***
+## CWalks       0.0001572  0.0003627   0.433  0.66520    
+## PutOuts      0.0004838  0.0001799   2.689  0.00781 ** 
+## Assists      0.0003199  0.0003467   0.923  0.35736    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.6045 on 192 degrees of freedom
+## Multiple R-squared:  0.5784,	Adjusted R-squared:  0.563 
+## F-statistic: 37.62 on 7 and 192 DF,  p-value: < 2.2e-16
+```
+
+```r
+cat("lm R2: ")
+```
+
+```
+## lm R2:
+```
+
+```r
+(lm.test.R2 <- mse.R2(hitters.lm1,hitters.test)$R2)
+```
+
+```
+## [1] 0.3074694
+```
+
+```r
+cat("lm MSE: ")
+```
+
+```
+## lm MSE:
+```
+
+```r
+(lm.test.mse <- mse.R2(hitters.lm1,hitters.test)$mse)
+```
+
+```
+## [1] 0.5113022
+```
+
+ridge regression
+
+```r
+hitters.mod <- model.matrix(Salary ~ ., data=hitters.train)
+hitters.ridge.cv <- cv.glmnet(hitters.mod, hitters.train$Salary, alpha=0)
+plot(hitters.ridge.cv)
+```
+
+![](Chapter_8_files/figure-html/unnamed-chunk-33-1.png)<!-- -->
+
+```r
+hitters.mod.test <- model.matrix(Salary ~ . , data = hitters.test)
+hitters.ridge.predict <- predict(hitters.ridge.cv, newx = hitters.mod.test) # uses lambsa.1se by default
+
+cat("ridge R2: ")
+```
+
+```
+## ridge R2:
+```
+
+```r
+(hitters.ridge.R2 <- cor(hitters.ridge.predict, hitters.test$Salary)^2)
+```
+
+```
+##        [,1]
+## 1 0.3109871
+```
+
+```r
+cat("ridge MSE: ")
+```
+
+```
+## ridge MSE:
+```
+
+```r
+(hitters.ridge.mse <- mean( (hitters.ridge.predict - hitters.test$Salary)^2))
+```
+
+```
+## [1] 0.4498941
+```
+
+
 _(f) Which variables appear to be the most important predictors in the boosted model?_
+
+
+```r
+summary(hitters.gbm.best)
+```
+
+![](Chapter_8_files/figure-html/unnamed-chunk-34-1.png)<!-- -->
+
+```
+##                 var     rel.inf
+## CAtBat       CAtBat 18.04430905
+## CRuns         CRuns 13.30989485
+## PutOuts     PutOuts  8.63247018
+## Walks         Walks  7.81818822
+## CRBI           CRBI  6.28300770
+## CWalks       CWalks  5.53872369
+## Assists     Assists  5.49647822
+## CHmRun       CHmRun  5.20138838
+## Years         Years  4.96502148
+## Hits           Hits  4.91165923
+## AtBat         AtBat  4.59180982
+## RBI             RBI  4.43146072
+## HmRun         HmRun  3.23322339
+## Runs           Runs  2.59142725
+## Errors       Errors  2.47430484
+## CHits         CHits  1.14679280
+## Division   Division  0.78327742
+## NewLeague NewLeague  0.50121275
+## League       League  0.04535001
+```
+
+AtBat is most informative.
 
 _(g) Now apply bagging to the training set. What is the test set MSE for this approach?_
 
+
+```r
+hitters.bag <- randomForest(Salary ~ ., data=hitters.train,mtry=ncol(hitters.train)-1)
+
+mse.R2(hitters.bag,hitters.test)
+```
+
+```
+## $mse
+## [1] 0.2352637
+## 
+## $R2
+## [1] 0.6545249
+```
+
+Bag is the best!
+
+Would random forest be better? (use default mtry of p/3)
+
+
+```r
+hitters.rf <- randomForest(Salary ~ ., data=hitters.train)
+
+mse.R2(hitters.rf,hitters.test)
+```
+
+```
+## $mse
+## [1] 0.2162978
+## 
+## $R2
+## [1] 0.6764298
+```
+
+yes.  although really the differences are small and we should probably be doing CV to determine the variance.
+
+## Q11
+
+_11. This question uses the Caravan data set._
+
+_(a) Create a training set consisting of the first 1,000 observations, and a test set consisting of the remaining observations._
+
+
+```r
+data("Caravan")
+?Caravan
+head(Caravan)
+```
+
+```
+##   MOSTYPE MAANTHUI MGEMOMV MGEMLEEF MOSHOOFD MGODRK MGODPR MGODOV MGODGE
+## 1      33        1       3        2        8      0      5      1      3
+## 2      37        1       2        2        8      1      4      1      4
+## 3      37        1       2        2        8      0      4      2      4
+## 4       9        1       3        3        3      2      3      2      4
+## 5      40        1       4        2       10      1      4      1      4
+## 6      23        1       2        1        5      0      5      0      5
+##   MRELGE MRELSA MRELOV MFALLEEN MFGEKIND MFWEKIND MOPLHOOG MOPLMIDD
+## 1      7      0      2        1        2        6        1        2
+## 2      6      2      2        0        4        5        0        5
+## 3      3      2      4        4        4        2        0        5
+## 4      5      2      2        2        3        4        3        4
+## 5      7      1      2        2        4        4        5        4
+## 6      0      6      3        3        5        2        0        5
+##   MOPLLAAG MBERHOOG MBERZELF MBERBOER MBERMIDD MBERARBG MBERARBO MSKA
+## 1        7        1        0        1        2        5        2    1
+## 2        4        0        0        0        5        0        4    0
+## 3        4        0        0        0        7        0        2    0
+## 4        2        4        0        0        3        1        2    3
+## 5        0        0        5        4        0        0        0    9
+## 6        4        2        0        0        4        2        2    2
+##   MSKB1 MSKB2 MSKC MSKD MHHUUR MHKOOP MAUT1 MAUT2 MAUT0 MZFONDS MZPART
+## 1     1     2    6    1      1      8     8     0     1       8      1
+## 2     2     3    5    0      2      7     7     1     2       6      3
+## 3     5     0    4    0      7      2     7     0     2       9      0
+## 4     2     1    4    0      5      4     9     0     0       7      2
+## 5     0     0    0    0      4      5     6     2     1       5      4
+## 6     2     2    4    2      9      0     5     3     3       9      0
+##   MINKM30 MINK3045 MINK4575 MINK7512 MINK123M MINKGEM MKOOPKLA PWAPART
+## 1       0        4        5        0        0       4        3       0
+## 2       2        0        5        2        0       5        4       2
+## 3       4        5        0        0        0       3        4       2
+## 4       1        5        3        0        0       4        4       0
+## 5       0        0        9        0        0       6        3       0
+## 6       5        2        3        0        0       3        3       0
+##   PWABEDR PWALAND PPERSAUT PBESAUT PMOTSCO PVRAAUT PAANHANG PTRACTOR
+## 1       0       0        6       0       0       0        0        0
+## 2       0       0        0       0       0       0        0        0
+## 3       0       0        6       0       0       0        0        0
+## 4       0       0        6       0       0       0        0        0
+## 5       0       0        0       0       0       0        0        0
+## 6       0       0        6       0       0       0        0        0
+##   PWERKT PBROM PLEVEN PPERSONG PGEZONG PWAOREG PBRAND PZEILPL PPLEZIER
+## 1      0     0      0        0       0       0      5       0        0
+## 2      0     0      0        0       0       0      2       0        0
+## 3      0     0      0        0       0       0      2       0        0
+## 4      0     0      0        0       0       0      2       0        0
+## 5      0     0      0        0       0       0      6       0        0
+## 6      0     0      0        0       0       0      0       0        0
+##   PFIETS PINBOED PBYSTAND AWAPART AWABEDR AWALAND APERSAUT ABESAUT AMOTSCO
+## 1      0       0        0       0       0       0        1       0       0
+## 2      0       0        0       2       0       0        0       0       0
+## 3      0       0        0       1       0       0        1       0       0
+## 4      0       0        0       0       0       0        1       0       0
+## 5      0       0        0       0       0       0        0       0       0
+## 6      0       0        0       0       0       0        1       0       0
+##   AVRAAUT AAANHANG ATRACTOR AWERKT ABROM ALEVEN APERSONG AGEZONG AWAOREG
+## 1       0        0        0      0     0      0        0       0       0
+## 2       0        0        0      0     0      0        0       0       0
+## 3       0        0        0      0     0      0        0       0       0
+## 4       0        0        0      0     0      0        0       0       0
+## 5       0        0        0      0     0      0        0       0       0
+## 6       0        0        0      0     0      0        0       0       0
+##   ABRAND AZEILPL APLEZIER AFIETS AINBOED ABYSTAND Purchase
+## 1      1       0        0      0       0        0       No
+## 2      1       0        0      0       0        0       No
+## 3      1       0        0      0       0        0       No
+## 4      1       0        0      0       0        0       No
+## 5      1       0        0      0       0        0       No
+## 6      0       0        0      0       0        0       No
+```
+
+
+```r
+Caravan$Purchase <- ifelse(Caravan$Purchase=="Yes",1,0)
+caravan.train <- Caravan[1:1000,]
+caravan.test <- Caravan[1001:nrow(Caravan),]
+```
+
+
+_(b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?_
+
+
+```r
+caravan.gbm <- gbm(Purchase ~ ., data=caravan.train, n.trees=1000,shrinkage=0.01)
+```
+
+```
+## Distribution not specified, assuming bernoulli ...
+```
+
+```
+## Warning in gbm.fit(x, y, offset = offset, distribution = distribution, w =
+## w, : variable 50: PVRAAUT has no variation.
+```
+
+```
+## Warning in gbm.fit(x, y, offset = offset, distribution = distribution, w =
+## w, : variable 71: AVRAAUT has no variation.
+```
+
+```r
+summary(caravan.gbm)
+```
+
+![](Chapter_8_files/figure-html/unnamed-chunk-39-1.png)<!-- -->
+
+```
+##               var     rel.inf
+## PPERSAUT PPERSAUT 14.81153585
+## MKOOPKLA MKOOPKLA 10.18352711
+## MOPLHOOG MOPLHOOG  7.46988461
+## MBERMIDD MBERMIDD  5.35893681
+## PBRAND     PBRAND  5.14612619
+## ABRAND     ABRAND  4.58876466
+## MGODGE     MGODGE  4.12489272
+## MINK3045 MINK3045  3.46849740
+## MOSTYPE   MOSTYPE  3.13912112
+## PWAPART   PWAPART  2.81524768
+## MAUT1       MAUT1  2.42529780
+## MAUT2       MAUT2  2.19602290
+## MSKC         MSKC  2.18016892
+## MINKGEM   MINKGEM  2.16053533
+## MGODPR     MGODPR  2.08904955
+## MSKA         MSKA  2.05967049
+## MSKB1       MSKB1  1.78156480
+## PBYSTAND PBYSTAND  1.71637936
+## MBERHOOG MBERHOOG  1.60728021
+## MFWEKIND MFWEKIND  1.59335727
+## MGODOV     MGODOV  1.53576117
+## MINK7512 MINK7512  1.46317251
+## MBERARBG MBERARBG  1.21610582
+## MRELGE     MRELGE  1.05713192
+## MINK4575 MINK4575  1.02240580
+## MGODRK     MGODRK  0.96755268
+## MRELOV     MRELOV  0.87606466
+## MFGEKIND MFGEKIND  0.87038875
+## MAUT0       MAUT0  0.84516241
+## MHHUUR     MHHUUR  0.84007321
+## MSKD         MSKD  0.74253898
+## MOPLMIDD MOPLMIDD  0.74238890
+## APERSAUT APERSAUT  0.70020841
+## MINKM30   MINKM30  0.68078142
+## MOSHOOFD MOSHOOFD  0.65049654
+## MGEMOMV   MGEMOMV  0.60486890
+## MBERBOER MBERBOER  0.58170840
+## PMOTSCO   PMOTSCO  0.55944989
+## MHKOOP     MHKOOP  0.55577465
+## MZFONDS   MZFONDS  0.48789413
+## PLEVEN     PLEVEN  0.34296701
+## MBERARBO MBERARBO  0.33844492
+## MGEMLEEF MGEMLEEF  0.33333983
+## MFALLEEN MFALLEEN  0.29498678
+## MRELSA     MRELSA  0.28358522
+## MZPART     MZPART  0.21904907
+## MOPLLAAG MOPLLAAG  0.10621390
+## MSKB2       MSKB2  0.06223572
+## MINK123M MINK123M  0.05872135
+## MBERZELF MBERZELF  0.04466625
+## MAANTHUI MAANTHUI  0.00000000
+## PWABEDR   PWABEDR  0.00000000
+## PWALAND   PWALAND  0.00000000
+## PBESAUT   PBESAUT  0.00000000
+## PVRAAUT   PVRAAUT  0.00000000
+## PAANHANG PAANHANG  0.00000000
+## PTRACTOR PTRACTOR  0.00000000
+## PWERKT     PWERKT  0.00000000
+## PBROM       PBROM  0.00000000
+## PPERSONG PPERSONG  0.00000000
+## PGEZONG   PGEZONG  0.00000000
+## PWAOREG   PWAOREG  0.00000000
+## PZEILPL   PZEILPL  0.00000000
+## PPLEZIER PPLEZIER  0.00000000
+## PFIETS     PFIETS  0.00000000
+## PINBOED   PINBOED  0.00000000
+## AWAPART   AWAPART  0.00000000
+## AWABEDR   AWABEDR  0.00000000
+## AWALAND   AWALAND  0.00000000
+## ABESAUT   ABESAUT  0.00000000
+## AMOTSCO   AMOTSCO  0.00000000
+## AVRAAUT   AVRAAUT  0.00000000
+## AAANHANG AAANHANG  0.00000000
+## ATRACTOR ATRACTOR  0.00000000
+## AWERKT     AWERKT  0.00000000
+## ABROM       ABROM  0.00000000
+## ALEVEN     ALEVEN  0.00000000
+## APERSONG APERSONG  0.00000000
+## AGEZONG   AGEZONG  0.00000000
+## AWAOREG   AWAOREG  0.00000000
+## AZEILPL   AZEILPL  0.00000000
+## APLEZIER APLEZIER  0.00000000
+## AFIETS     AFIETS  0.00000000
+## AINBOED   AINBOED  0.00000000
+## ABYSTAND ABYSTAND  0.00000000
+```
+
+
+_(c) Use the boosting model to predict the response on the test data. Predict that a person will make a purchase if the estimated prob- ability of purchase is greater than 20 %. Form a confusion ma- trix. What fraction of the people predicted to make a purchase do in fact make one? How does this compare with the results obtained from applying KNN or logistic regression to this data set?_
+
+
+```r
+caravan.gbm.predict <- predict(caravan.gbm,newdata = caravan.test,n.trees=1000,type="response")
+caravan.gbm.predict <- ifelse(caravan.gbm.predict>.2,1,0)
+table(predicted=caravan.gbm.predict,observed=caravan.test$Purchase)
+```
+
+```
+##          observed
+## predicted    0    1
+##         0 4411  254
+##         1  122   35
+```
+
+```r
+cat("fraction of predicted purchasers making purchase: ")
+```
+
+```
+## fraction of predicted purchasers making purchase:
+```
+
+```r
+35/(128+35)
+```
+
+```
+## [1] 0.2147239
+```
+
+```r
+cat("fraction of all purchasers making purchase (in test set): ")
+```
+
+```
+## fraction of all purchasers making purchase (in test set):
+```
+
+```r
+mean(caravan.test$Purchase)
+```
+
+```
+## [1] 0.05993364
+```
+
+So a 3.5X improvement over random guessing.
+
+KNN:
+
+Try a few different values of K
+
+```r
+ks <- c(1:15)
+
+knn.prediction <- lapply(ks,function(k) {
+  knn(caravan.train[,-86], caravan.test[,-86], cl=caravan.train$Purchase,k=k)  %>% as.numeric()-1 }
+) 
+
+names(knn.prediction) <- ks
+
+sapply(knn.prediction,function(k.pred) {
+  sum(k.pred==1 & caravan.test$Purchase==1)  / sum(k.pred) } ) %>% round(3)
+```
+
+```
+##     1     2     3     4     5     6     7     8     9    10    11    12 
+## 0.084 0.083 0.108 0.138 0.118 0.179 0.111 0.154 0.222 0.000 0.000 0.500 
+##    13    14    15 
+##   NaN   NaN   NaN
+```
+
+However, in the book they standardized the predictors first
+
+
+```r
+ks <- c(1:15)
+
+caravanX <- scale(Caravan[,-86])
+
+caravanX.train <- caravanX[1:1000,]
+caravanX.test <- caravanX[1001:nrow(caravanX),]
+
+
+knn.prediction <- lapply(ks,function(k) {
+  knn(caravanX.train, caravanX.test, cl=caravan.train$Purchase,k=k)  %>% as.numeric()-1 }
+) 
+
+names(knn.prediction) <- ks
+
+sapply(knn.prediction,function(k.pred) {
+    sum(k.pred==1 & caravan.test$Purchase==1, na.rm=TRUE)  / sum(k.pred, na.rm = TRUE) } ) %>% round(3)
+```
+
+```
+##     1     2     3     4     5     6     7     8     9    10    11    12 
+## 0.118 0.095 0.208 0.190 0.278 0.242 0.111 0.143 0.000 0.000   NaN   NaN 
+##    13    14    15 
+##   NaN   NaN   NaN
+```
+
+KNN is better(!)..although we didn't really explore the boost parameter space.
 

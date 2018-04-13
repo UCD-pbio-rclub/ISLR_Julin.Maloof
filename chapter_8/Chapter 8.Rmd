@@ -17,14 +17,9 @@ library(ISLR)
 library(tree)
 library(randomForest)
 library(gbm)
+library(glmnet)
+library(class)
 ```
-
-5
-7
-8 d,e
-10
-11
-12
 
 ## Q1
 
@@ -340,27 +335,195 @@ hitters.gbm <- lapply(lambdas, function(l) {
 }
 )
 
-train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
+names(hitters.gbm) <- lambdas
 
-plot(lambdas,train.mse,type="b")
+gbm.train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
+
+plot(lambdas,gbm.train.mse,type="b")
 ```
 
 _(d) Produce a plot with different shrinkage values on the x-axis and the corresponding test set MSE on the y-axis._
 
 ```{r}
-test.mse <- sapply(hitters.gbm, function(f) {
+gbm.test.mse <- sapply(hitters.gbm, function(f) {
   mean( (predict(f,newdata=hitters.test,n.trees=1000)-hitters.test$Salary)^2)
 }
 )
 
-plot(lambdas,test.mse,type="b")
+plot(lambdas,gbm.test.mse,type="b")
+```
+
+The best lambda in this case seems to be 0.10
+
+```{r}
+hitters.gbm.best <- hitters.gbm[["0.1"]]
+gbm.best.predict <- predict(hitters.gbm.best,newdata=hitters.test,n.trees=1000)
+cat("gbm MSE: ")
+(hitters.gbm.mse <- mean( (gbm.best.predict-hitters.test$Salary)^2))
+cat("gbm R2: ")
+(hitters.gbm.R2 <- cor(gbm.best.predict,hitters.test$Salary)^2)
 ```
 
 
 _(e) Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches seen in Chapters 3 and 6._
 
+First just try multiple regression
+
+```{r}
+
+mse.R2 <- function(object,newdata) {
+  observed <- rlang::f_lhs(formula(object)) %>% 
+    as.character() %>%
+    get(newdata)
+  
+  predicted <- predict(object,newdata=newdata)
+  
+  mse <- mean( (observed-predicted)^2)
+  R2 <- cor(observed,predicted)^2
+  
+  return(list(mse=mse,R2=R2))
+  }
+
+hitters.lm <- lm(Salary ~ ., data=hitters.train)
+summary(hitters.lm)
+hitters.lm1 <- lm(Salary ~ AtBat + Hits + Walks + Years + CWalks + PutOuts + Assists, data = hitters.train)
+summary(hitters.lm1)
+
+cat("lm R2: ")
+(lm.test.R2 <- mse.R2(hitters.lm1,hitters.test)$R2)
+
+
+cat("lm MSE: ")
+(lm.test.mse <- mse.R2(hitters.lm1,hitters.test)$mse)
+```
+
+ridge regression
+```{r}
+hitters.mod <- model.matrix(Salary ~ ., data=hitters.train)
+hitters.ridge.cv <- cv.glmnet(hitters.mod, hitters.train$Salary, alpha=0)
+plot(hitters.ridge.cv)
+hitters.mod.test <- model.matrix(Salary ~ . , data = hitters.test)
+hitters.ridge.predict <- predict(hitters.ridge.cv, newx = hitters.mod.test) # uses lambsa.1se by default
+
+cat("ridge R2: ")
+(hitters.ridge.R2 <- cor(hitters.ridge.predict, hitters.test$Salary)^2)
+
+
+cat("ridge MSE: ")
+(hitters.ridge.mse <- mean( (hitters.ridge.predict - hitters.test$Salary)^2))
+```
+
+
 _(f) Which variables appear to be the most important predictors in the boosted model?_
+
+```{r}
+summary(hitters.gbm.best)
+```
+
+AtBat is most informative.
 
 _(g) Now apply bagging to the training set. What is the test set MSE for this approach?_
 
+```{r}
+hitters.bag <- randomForest(Salary ~ ., data=hitters.train,mtry=ncol(hitters.train)-1)
+
+mse.R2(hitters.bag,hitters.test)
+```
+
+Bag is the best!
+
+Would random forest be better? (use default mtry of p/3)
+
+```{r}
+hitters.rf <- randomForest(Salary ~ ., data=hitters.train)
+
+mse.R2(hitters.rf,hitters.test)
+
+```
+
+yes.  although really the differences are small and we should probably be doing CV to determine the variance.
+
+## Q11
+
+_11. This question uses the Caravan data set._
+
+_(a) Create a training set consisting of the first 1,000 observations, and a test set consisting of the remaining observations._
+
+```{r}
+data("Caravan")
+?Caravan
+head(Caravan)
+```
+
+```{r}
+Caravan$Purchase <- ifelse(Caravan$Purchase=="Yes",1,0)
+caravan.train <- Caravan[1:1000,]
+caravan.test <- Caravan[1001:nrow(Caravan),]
+```
+
+
+_(b) Fit a boosting model to the training set with Purchase as the response and the other variables as predictors. Use 1,000 trees, and a shrinkage value of 0.01. Which predictors appear to be the most important?_
+
+```{r}
+caravan.gbm <- gbm(Purchase ~ ., data=caravan.train, n.trees=1000,shrinkage=0.01)
+summary(caravan.gbm)
+```
+
+
+_(c) Use the boosting model to predict the response on the test data. Predict that a person will make a purchase if the estimated prob- ability of purchase is greater than 20 %. Form a confusion ma- trix. What fraction of the people predicted to make a purchase do in fact make one? How does this compare with the results obtained from applying KNN or logistic regression to this data set?_
+
+```{r}
+caravan.gbm.predict <- predict(caravan.gbm,newdata = caravan.test,n.trees=1000,type="response")
+caravan.gbm.predict <- ifelse(caravan.gbm.predict>.2,1,0)
+table(predicted=caravan.gbm.predict,observed=caravan.test$Purchase)
+
+cat("fraction of predicted purchasers making purchase: ")
+35/(128+35)
+
+cat("fraction of all purchasers making purchase (in test set): ")
+mean(caravan.test$Purchase)
+```
+
+So a 3.5X improvement over random guessing.
+
+KNN:
+
+Try a few different values of K
+```{r}
+ks <- c(1:15)
+
+knn.prediction <- lapply(ks,function(k) {
+  knn(caravan.train[,-86], caravan.test[,-86], cl=caravan.train$Purchase,k=k)  %>% as.numeric()-1 }
+) 
+
+names(knn.prediction) <- ks
+
+sapply(knn.prediction,function(k.pred) {
+  sum(k.pred==1 & caravan.test$Purchase==1)  / sum(k.pred) } ) %>% round(3)
+
+```
+
+However, in the book they standardized the predictors first
+
+```{r}
+ks <- c(1:15)
+
+caravanX <- scale(Caravan[,-86])
+
+caravanX.train <- caravanX[1:1000,]
+caravanX.test <- caravanX[1001:nrow(caravanX),]
+
+
+knn.prediction <- lapply(ks,function(k) {
+  knn(caravanX.train, caravanX.test, cl=caravan.train$Purchase,k=k)  %>% as.numeric()-1 }
+) 
+
+names(knn.prediction) <- ks
+
+sapply(knn.prediction,function(k.pred) {
+    sum(k.pred==1 & caravan.test$Purchase==1, na.rm=TRUE)  / sum(k.pred, na.rm = TRUE) } ) %>% round(3)
+
+```
+
+KNN is better(!)..although we didn't really explore the boost parameter space.
 
