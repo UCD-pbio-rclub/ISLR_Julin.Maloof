@@ -15,12 +15,16 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ISLR)
 library(tree)
+library(randomForest)
+library(gbm)
 ```
 
-1
-2
-8 a,b,c
-9
+5
+7
+8 d,e
+10
+11
+12
 
 ## Q1
 
@@ -62,9 +66,68 @@ data3 %>%
   geom_line(size=2)
 ```
 
+## Q5
+
+_Suppose we produce ten bootstrapped samples from a data set containing red and green classes. We then apply a classification tree to each bootstrapped sample and, for a specific value of X, produce 10 estimates of P(Class is Red|X):_
+`0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, and 0.75.`
+_There are two common ways to combine these results together into a single class prediction. One is the majority vote approach discussed in this chapter. The second approach is to classify based on the average probability. In this example, what is the final classification under each of these two approaches?_
+
+```{r}
+prob <- c(0.1, 0.15, 0.2, 0.2, 0.55, 0.6, 0.6, 0.65, 0.7, 0.75)
+
+# Majority Vote:
+mean(prob>.5)
+  # red
+
+# Average:
+mean(prob)
+ # green
+```
+
+## Q7
+_In the lab, we applied random forests to the Boston data using mtry=6 and using ntree=25 and ntree=500. Create a plot displaying the test error resulting from random forests on this data set for a more com- prehensive range of values for mtry and ntree. You can model your plot after Figure 8.10. Describe the results obtained._
+
+```{r}
+library(MASS)
+data(Boston)
+set.seed(1234)
+train <- sample(1:nrow(Boston), nrow(Boston)/2)
+boston.train <- Boston[train,]
+boston.test <- Boston[-train,]
+```
+
+```{r}
+mtry <- c(1,3,6,9,13)
+ntree <- c(10,25,50,75,100,150)
+
+get.mse <- function(mtry,ntree) {
+  fit <- randomForest(medv ~ ., data=boston.train, mtry=mtry, ntree=ntree)
+  predict <- predict(fit,newdata=boston.test)
+  mse <- mean((boston.test$medv - predict) ^ 2)
+  mse
+}
+
+mse <- expand.grid(mtry=mtry,ntree=ntree) %>% 
+  mutate(mse = map2(mtry,ntree,get.mse) %>% unlist())
+
+head(mse)
+```
+
+```{r}
+mse %>% 
+  ggplot(aes(x=ntree,y=mse,color=factor(mtry),shape=factor(mtry))) +
+  geom_line() +
+  geom_point()
+```
+
+We don't see a lot of improvement beyond 50 trees or so.
+
+We 1 and 3 predictors, and possibly 13 underperform 6 and 9.
+
+
 ## Q8 (a,b,c)
 
-_8. In the lab, a classification tree was applied to the Carseats data set af- ter converting Sales into a qualitative response variable. Now we will seek to predict Sales using regression trees and related approaches, treating the response as a quantitative variable._
+_8. In the lab, a classification tree was applied to the Carseats data set after converting Sales into a qualitative response variable. Now we will seek to predict Sales using regression trees and related approaches, treating the response as a quantitative variable._
 
 _(a) Split the data set into a training set and a test set._
 
@@ -106,6 +169,39 @@ tree1.prune.predict <- predict(tree1.prune, newdata = carseats.test)
 ```
 
 slight reduction in MSE
+
+_(d) Use the bagging approach in order to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important._
+
+```{r}
+carseats.bag <- randomForest(Sales ~ ., mtry=ncol(carseats.train)-1, importance=TRUE, data=carseats.train)
+carseats.bag
+importance(carseats.bag)
+carseats.bag.predict <- predict(carseats.bag, newdata = carseats.test)
+(bag.mse <- mean((carseats.bag.predict-carseats.test$Sales)^2))
+```
+
+A substantial reduction in MSE
+
+(e) Use random forests to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important. Describe the effect of m, the number of variables considered at each split, on the error rate obtained.
+
+```{r}
+mtry <- c(2,3,5,7,9)
+
+fits <- lapply(mtry,function(m) {
+  randomForest(Sales ~ ., mtry=m, importance=TRUE, data=carseats.train)
+})
+
+names(fits) <- mtry
+
+lapply(fits,importance)
+
+sapply(fits, function(f) {
+  mean( (predict(f,newdata=carseats.test)-carseats.test$Sales)^2)
+}
+)
+```
+
+Increasing the number of variables considered at each split improves the MSE when only a small number of variables are being used and then things level out.
 
 ## Q9
 
@@ -211,4 +307,59 @@ tree1.accuracy
 ```
 
 Test accuracy is the same on either tree
+
+## Q10
+
+_We now use boosting to predict Salary in the Hitters data set._
+
+_(a) Remove the observations for whom the salary information is unknown, and then log-transform the salaries._
+
+```{r}
+data("Hitters")
+
+hitters <- Hitters %>% as_tibble() %>%
+  filter(!is.na(Salary)) %>%
+  mutate(Salary=log(Salary))
+```
+
+
+_(b) Create a training set consisting of the first 200 observations, and a test set consisting of the remaining observations._
+
+```{r}
+hitters.train <- hitters[1:200,]
+hitters.test <- hitters[201:nrow(hitters),]
+```
+
+_(c) Perform boosting on the training set with 1,000 trees for a range of values of the shrinkage parameter λ. Produce a plot with different shrinkage values on the x-axis and the corresponding training set MSE on the y-axis._
+
+```{r}
+lambdas <- c(.2,.1,.01,.001,.0001)
+
+hitters.gbm <- lapply(lambdas, function(l) { 
+  gbm(Salary ~ ., distribution = "gaussian", n.trees=1000, shrinkage=l,data=hitters.train) #interaction.depth = 1
+}
+)
+
+train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
+
+plot(lambdas,train.mse,type="b")
+```
+
+_(d) Produce a plot with different shrinkage values on the x-axis and the corresponding test set MSE on the y-axis._
+
+```{r}
+test.mse <- sapply(hitters.gbm, function(f) {
+  mean( (predict(f,newdata=hitters.test,n.trees=1000)-hitters.test$Salary)^2)
+}
+)
+
+plot(lambdas,test.mse,type="b")
+```
+
+
+_(e) Compare the test MSE of boosting to the test MSE that results from applying two of the regression approaches seen in Chapters 3 and 6._
+
+_(f) Which variables appear to be the most important predictors in the boosted model?_
+
+_(g) Now apply bagging to the training set. What is the test set MSE for this approach?_
 
