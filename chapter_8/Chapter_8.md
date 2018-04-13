@@ -120,10 +120,10 @@ data3 <- tibble(
 ```r
 data3 <- data3 %>% 
   mutate(
-    E=map2_dbl(pm1,pm2,max),
+    E=1-map2_dbl(pm1,pm2,max),
     G=2*pm1*pm2,
     Ent=map2_dbl(pm1,pm2, function(pm1,pm2) {
-      -sum(pm1*log(pm2) , pm2*log(pm1))
+      -sum(pm1*log(pm1) , pm2*log(pm2))
     })
   )
 ```
@@ -134,6 +134,10 @@ data3 %>%
   gather(key="criteria",value="value",-pm1,-pm2) %>%
   ggplot(aes(x=pm1,y=value,color=criteria)) +
   geom_line(size=2)
+```
+
+```
+## Warning: Removed 2 rows containing missing values (geom_path).
 ```
 
 ![](Chapter_8_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
@@ -590,7 +594,7 @@ summary(tree1)
 ## Misclassification error rate: 0.1512 = 121 / 800
 ```
 
-9 nodes with three predictors, good training prediction (0.1575)
+8 nodes with three predictors, good training prediction (0.155)
 
 _(c) Type in the name of the tree object in order to get a detailed text output. Pick one of the terminal nodes, and interpret the information displayed._
 
@@ -658,7 +662,7 @@ table(prediction=oj.prediction,observed=oj.test$Purchase)
 ## [1] 0.7814815
 ```
 
-82% prediction accuracy
+81% prediction accuracy
 
 _(f) Apply the cv.tree() function to the training set in order to determine the optimal tree size._
 
@@ -699,13 +703,13 @@ plot(tree1.cv$size, tree1.cv$dev / nrow(oj.test),type="l")
 
 _(h) Which tree size corresponds to the lowest cross-validated classi- fication error rate?_
 
-7
+2
 
 _(i) Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation. If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes._
 
 
 ```r
-tree1.prune <- prune.misclass(tree1,best = 7)
+tree1.prune <- prune.misclass(tree1,best = 2)
 ```
 
 _(j) Compare the training error rates between the pruned and un- pruned trees. Which is higher?_
@@ -733,15 +737,15 @@ summary(tree1.prune)
 ```
 ## 
 ## Classification tree:
-## snip.tree(tree = tree1, nodes = 7L)
+## snip.tree(tree = tree1, nodes = 2:3)
 ## Variables actually used in tree construction:
-## [1] "LoyalCH"       "PriceDiff"     "ListPriceDiff"
-## Number of terminal nodes:  7 
-## Residual mean deviance:  0.7416 = 588.1 / 793 
-## Misclassification error rate: 0.1512 = 121 / 800
+## [1] "LoyalCH"
+## Number of terminal nodes:  2 
+## Residual mean deviance:  0.9667 = 771.4 / 798 
+## Misclassification error rate: 0.1888 = 151 / 800
 ```
 
-The unpruned tree has slightly lowre error rate
+The unpruned tree has lower training error rate
 
 _(k) Compare the test error rates between the pruned and unpruned trees. Which is higher?_
 
@@ -754,8 +758,8 @@ table(prediction=prune.predict,observed=oj.test$Purchase)
 ```
 ##           observed
 ## prediction  CH  MM
-##         CH 129  30
-##         MM  29  82
+##         CH 135  32
+##         MM  23  80
 ```
 
 ```r
@@ -771,10 +775,10 @@ tree1.accuracy
 ```
 
 ```
-## [1] 0.7814815
+## [1] 0.7962963
 ```
 
-Test accuracy is the same on either tree
+Test accuracy is better on the pruned tree
 
 ## Q10
 
@@ -838,4 +842,5 @@ _(e) Compare the test MSE of boosting to the test MSE that results from applying
 _(f) Which variables appear to be the most important predictors in the boosted model?_
 
 _(g) Now apply bagging to the training set. What is the test set MSE for this approach?_
+
 
