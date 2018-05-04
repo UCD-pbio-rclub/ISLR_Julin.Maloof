@@ -1,0 +1,186 @@
+---
+title: "Untitled"
+author: "Julin N Maloof"
+date: "5/3/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(e1071)
+```
+
+
+## 9.6.1
+
+```{r}
+set.seed(1)
+x=matrix(rnorm(20*2), ncol=2)
+y=c(rep(-1,10), rep(1,10))
+x[y==1,]=x[y==1,] + 1
+plot(x, col=(3-y))
+```
+
+```{r}
+dat=data.frame(x=x, y=as.factor(y))
+svmfit=svm(y ~ ., data=dat, kernel="linear", cost=10, scale=FALSE)
+plot(svmfit , dat)
+summary(svmfit)
+```
+
+
+1 (optional)
+3
+6
+7 a,b
+8 8-e
+
+## Q1
+
+Sketch the hyperplane 1 + 3X1 − X2 = 0. Indicate the set of points for which 1+3X1 −X2 > 0, as well as the set of points for which 1 + 3X1 − X2 < 0.
+
+X2 = 3X1 + 1
+
+```{r}
+hyperplane <- tibble(
+  X1=seq(-10,10,.1),
+  X2=3*X1 + 1)
+
+grid <- expand.grid(X1=-10:10,X2=seq(-25,25,5)) %>% as_tibble() %>%
+  mutate(position=ifelse(1+3*X1-X2>0,"above",ifelse(1+3*X1-X2<0,"below","on")))
+                                                          
+```
+
+```{r}
+pl <- hyperplane %>% ggplot(aes(x=X1,y=X2)) +
+  geom_line() +
+  geom_point(aes(color=position),data=grid)
+
+pl
+```
+
+```{r}
+
+```
+
+
+## Q3
+
+Here we explore the maximal margin classifier on a toy data set.
+
+(a) We are given n = 7 observations in p = 2 dimensions. For each observation, there is an associated class label.
+
+```{r}
+dataq3 <- tribble(
+  ~X1, ~X2, ~Y,
+  3, 4, "red",
+  2, 2, "red",
+  4, 4, "red",
+  1, 4, "red",
+  2, 1, "blue",
+  4, 3, "blue",
+  4, 1, "blue"
+)
+```
+
+sketch the observations
+
+```{r}
+pl <- dataq3 %>%
+  ggplot(aes(x=X1,y=X2,color=Y)) +
+  scale_color_identity() +
+  geom_point()
+pl
+```
+
+(b) Sketch the optimal separating hyperplane, and provide the equa- tion for this hyperplane (of the form (9.1)).
+
+The hyperplane goes through  2, 1.5; 3, 2.5; 4,3.5etc,
+
+X2 = X1 - 0.5
+
+Or X1 - X2 -.5 = 0
+
+```{r}
+hyperplane <- tibble(X1=1:4,X2=X1-0.5)
+pl <- pl + geom_line(data=hyperplane,color="black")
+pl
+```
+
+
+(C) Describe the classification rule for the maximal margin classifier. It should be something along the lines of “Classify to Red if β0 + β1X1 + β2X2 > 0, and classify to Blue otherwise.” Provide the values for β0, β1, and β2.
+
+Classify to red if X1 - X2 -.5 > 0; otherwise to blue
+
+(D)On your sketch, indicate the margin for the maximal margin hyperplane.
+
+```{r}
+upper_margin <- hyperplane %>% mutate(X2=X2 + .5)
+lower_margin <- hyperplane %>% mutate(X2=X2 - .5)
+pl <- pl +
+  geom_line(data=upper_margin, color="gray30", lty=2) +
+  geom_line(data=lower_margin, color="gray30", lty=2)
+pl
+```
+
+(E) Indicate the support vectors for the maximal margin classifier.  
+
+These are the points touching the dotted lines
+
+(f) Argue that a slight movement of the seventh observation would not affect the maximal margin hyperplane.
+
+The seventh observation is far from the margins and this would not affect their placement.
+
+(g) Sketch a hyperplane that is not the optimal separating hyper- plane, and provide the equation for this hyperplane.
+
+1.1?*X1 - X2 -.5 = 0
+
+```{r}
+pl + geom_abline(intercept=-.5, slope=1.1, lty=3)
+```
+
+
+
+
+(h) Draw an additional observation on the plot so that the two classes are no longer separable by a hyperplane.
+
+```{r}
+pl + geom_point(x=3,y=1,color="red")
+```
+
+
+## Q6
+
+_At the end of Section 9.6.1, it is claimed that in the case of data that is just barely linearly separable, a support vector classifier with a small value of cost that misclassifies a couple of training observations may perform better on test data than one with a huge value of cost that does not misclassify any training observations. You will now investigate this claim._
+
+_(a) Generate two-class data with p = 2 in such a way that the classes are just barely linearly separable._
+
+```{r}
+set.seed(23)
+x <- matrix(rnorm(20*2),ncol=2)
+y <- c(rep(-1,10), rep(1,10))
+x[y==1,]=x[y==1,] + 2.2
+plot(x, col=(3-y))
+```
+
+_(b) Compute the cross-validation error rates for support vector classifiers with a range of cost values. How many training errors are misclassified for each value of cost considered, and how does this relate to the cross-validation errors obtained?_
+
+```{r}
+dat <- data.frame(x,y=factor(y))
+tune.out <- tune(svm,y~., data=dat,kernel="linear",ranges=list(cost=c(0.001,0.01,0.1,1,5,10,100)))
+
+summary(tune.out)
+```
+
+Is the error rate just the proportion of observations mis-classified?
+
+```{r}
+svm1 <- svm(y~., data=dat,kernel="linear",cost=0.01)
+summary(svm1)
+```
+
+
+
