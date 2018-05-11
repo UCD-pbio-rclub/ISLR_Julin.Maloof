@@ -61,10 +61,6 @@ pl <- hyperplane %>% ggplot(aes(x=X1,y=X2)) +
 pl
 ```
 
-```{r}
-
-```
-
 
 ## Q3
 
@@ -211,6 +207,79 @@ Radial outperforms in training and WAY outperforms in test
 
 ## Q5
 
+_We have seen that we can fit an SVM with a non-linear kernel in order to perform classification using a non-linear decision boundary. We will now see that we can also obtain a non-linear decision boundary by performing logistic regression using non-linear transformations of the features._
+
+_(a) Generate a data set with n = 500 and p = 2, such that the obser- vations belong to two classes with a quadratic decision boundary between them. For instance, you can do this as follows_
+
+```{r}
+set.seed(2323)
+q5.data <- tibble(
+  x1=runif(500)-0.5,
+ x2=runif(500)-0.5,
+ y=as.factor(1*(x1^2-x2^2 > 0))
+)
+head(q5.data)
+```
+
+
+_(b) Plot the observations, colored according to their class labels. Your plot should display X1 on the x-axis, and X2 on the y- axis._
+
+```{r}
+q5.data %>% ggplot(aes(x=x1,y=x2,color=y)) + geom_point()
+```
+
+(c) Fit a logistic regression model to the data, using X1 and X2 as predictors.
+
+```{r}
+q5.glm1 <- glm(y~x1+x2,family="binomial",data=q5.data)
+summary(q5.glm1)
+```
+
+(d) Apply this model to the training data in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be linear.
+
+```{r}
+q5.data %>% mutate(glm.linear.pred = ifelse(predict(q5.glm1,type="response")>0.5,"1","0")) %>%
+  ggplot(aes(x=x1,y=x2,color=glm.linear.pred,shape=y)) + geom_point()
+```
+
+
+
+_(e) Now fit a logistic regression model to the data using non-linear functions of X1 and X2 as predictors (e.g. X12, X1 ×X2, log(X2), and so forth)._
+
+```{r}
+q5.glm2 <- glm(y~poly(x1,2)+poly(x2,2),family=binomial,data=q5.data)
+summary(q5.glm2)
+```
+
+(f) Apply this model to the training data in order to obtain a predicted class label for each training observation. Plot the observations, colored according to the predicted class labels. The decision boundary should be obviously non-linear. If it is not, then repeat (a)-(e) until you come up with an example in which the predicted class labels are obviously non-linear.
+
+```{r}
+q5.data %>% mutate(glm.poly.pred = ifelse(predict(q5.glm2,type="response")>0.5,"1","0")) %>%
+  ggplot(aes(x=x1,y=x2,color=glm.poly.pred,shape=y)) + geom_point()
+```
+
+(g) Fit a support vector classifier to the data with X1 and X2 as predictors. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class labels.svm
+
+```{r}
+svm51 <- tune(svm,y~x1+x2,ranges=list(cost=c(0.01,0.05,0.1,0.5,1,5,10)), data = q5.data,kernel="linear")
+svm51
+q5.data %>% mutate(svm.linear.pred = predict(svm51$best.model)) %>%
+  ggplot(aes(x=x1,y=x2,color=svm.linear.pred,shape=y)) + geom_point()
+```
+
+(h) Fit a SVM using a non-linear kernel to the data. Obtain a class prediction for each training observation. Plot the observations, colored according to the predicted class labels.
+
+```{r}
+svm52 <- tune(svm,y~x1+x2,ranges=list(cost=c(0.01,0.05,0.1,0.5,1,5,10)), data = q5.data,kernel="radial")
+svm52
+q5.data %>% mutate(svm.linear.pred = predict(svm52$best.model)) %>%
+  ggplot(aes(x=x1,y=x2,color=svm.linear.pred,shape=y)) + geom_point()
+```
+
+(i) Comment on your results.
+
+svm radial and glm poly look good.
+
 ## Q6
 
 _At the end of Section 9.6.1, it is claimed that in the case of data that is just barely linearly separable, a support vector classifier with a small value of cost that misclassifies a couple of training observations may perform better on test data than one with a huge value of cost that does not misclassify any training observations. You will now investigate this claim._
@@ -286,11 +355,28 @@ Auto <- Auto %>% mutate(mpg.class = as.numeric(mpg > median(mpg)))
 _(b) Fit a support vector classifier to the data with various values of cost, in order to predict whether a car gets high or low gas mileage. Report the cross-validation errors associated with different values of this parameter. Comment on your results._
 
 ```{r}
-tune.out <- tune(svm, mpg.class ~ . - mpg, data=Auto, range = list (cost=c(0.001,0.01,0.1,1,5,10,50,100,500,1000)))
+tune.out <- tune(svm, mpg.class ~ . - mpg, data=Auto, kernel="linear",range = list (cost=c(0.001,0.01,0.1,1,5,10,50,100,500,1000)))
 summary(tune.out)
 ```
 
-Best is cost = 100
+Best is cost = 1, with a ~ 10% CV error rate
+
+_(c) Now repeat (b), this time using SVMs with radial and polynomial basis kernels, with different values of gamma and degree and cost. Comment on your results._
+
+```{r}
+tune.out.poly <- tune(svm, mpg.class ~ . - mpg, data=Auto, kernel="polynomial",range = list (cost=c(0.001,0.01,0.1,1,5,10,50,100,500,1000),degree=2:5))
+summary(tune.out.poly)
+```
+
+not as good, best = 15.7% CV error rate
+
+```{r}
+tune.out.radial <- tune(svm, mpg.class ~ . - mpg, data=Auto, kernel="radial",range = list (cost=c(0.001,0.01,0.1,1,5,10,50,100,500,1000),gamma=c(0.01,0.1,0.5,1,2,3)))
+summary(tune.out.radial)
+```
+Best...6.5% CV error
+
+(d) Make some plots to back up your assertions in (b) and (c).
 
 ## Q8
 
@@ -357,3 +443,98 @@ mean(predict.test!=OJ.test$Purchase)
 
 slightly worse; presumably within the error range on this.
 
+_(f) Repeat parts (b) through (e) using a support vector machine
+with a radial kernel. Use the default value for gamma._
+
+```{r}
+svm8.2 <- svm(Purchase ~ ., data=OJ.train, cost=0.01, kernel="radial")
+summary(svm8.2)
+```
+
+training:
+```{r}
+table(predict=predict(svm8.2),observed=OJ.train$Purchase)
+mean(predict(svm8.2)!=OJ.train$Purchase)
+```
+
+39% traiing error rate
+
+test:
+
+```{r}
+table(predict=predict(svm8.2,newdata = OJ.test),observed=OJ.test$Purchase)
+mean(predict(svm8.2,newdata = OJ.test)!=OJ.test$Purchase)
+```
+
+Test error 38.1 %.
+
+_(d) Use the tune() function to select an optimal cost. Consider values in the range 0.01 to 10._
+
+```{r}
+tune.out.radial <- tune(svm,Purchase ~ ., data=OJ.train, kernel="radial", ranges=list(cost=c(0.01,0.02,0.05,1,5,10)))
+summary(tune.out.radial)
+```
+
+```{r}
+predict.train <- predict(tune.out.radial$best.model)
+table(predict.train,OJ.train$Purchase)
+mean(predict.train!=OJ.train$Purchase)
+```
+15%
+
+```{r}
+predict.test <- predict(tune.out.radial$best.model,newdata = OJ.test)
+table(predict.test,OJ.test$Purchase)
+mean(predict.test!=OJ.test$Purchase)
+```
+
+17%
+
+(g) Repeat parts (b) through (e) using a support vector machine
+with a polynomial kernel. Set degree=2.
+
+```{r}
+svm8.3 <- svm(Purchase ~ ., data=OJ.train, cost=0.01, kernel="polynomial", degree=2)
+summary(svm8.3)
+```
+
+training:
+```{r}
+table(predict=predict(svm8.3),observed=OJ.train$Purchase)
+mean(predict(svm8.3)!=OJ.train$Purchase)
+```
+
+37% traiing error rate
+
+test:
+
+```{r}
+table(predict=predict(svm8.3,newdata = OJ.test),observed=OJ.test$Purchase)
+mean(predict(svm8.3,newdata = OJ.test)!=OJ.test$Purchase)
+```
+
+Test error 37# %.
+
+```{r}
+tune.out.poly <- tune(svm,Purchase ~ ., data=OJ.train, kernel="polynomial", degree=2,ranges=list(cost=c(0.01,0.02,0.05,1,5,10)))
+summary(tune.out.poly)
+```
+
+```{r}
+predict.train <- predict(tune.out.poly$best.model)
+table(predict.train,OJ.train$Purchase)
+mean(predict.train!=OJ.train$Purchase)
+```
+15%
+
+```{r}
+predict.test <- predict(tune.out.poly$best.model,newdata = OJ.test)
+table(predict.test,OJ.test$Purchase)
+mean(predict.test!=OJ.test$Purchase)
+```
+
+19%
+
+(h) Overall, which approach seems to give the best results on this data?
+
+all about the same; slight edge to radial.  should try optimizing gamma and degree...
