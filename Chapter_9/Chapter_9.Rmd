@@ -32,11 +32,10 @@ summary(svmfit)
 ```
 
 
-1 (optional)
-3
-6
-7 a,b
-8 8-e
+4
+5
+remainder of 7
+remainder of 8
 
 ## Q1
 
@@ -150,7 +149,67 @@ pl + geom_abline(intercept=-.5, slope=1.1, lty=3)
 ```{r}
 pl + geom_point(x=3,y=1,color="red")
 ```
+## Q4
+_Generate a simulated two-class data set with 100 observations and two features in which there is a visible but non-linear separation between the two classes. Show that in this setting, a support vector machine with a polynomial kernel (with degree greater than 1) or a radial kernel will outperform a support vector classifier on the training data. Which technique performs best on the test data? Make plots and report training and test error rates in order to back up your assertions._
 
+```{r}
+set.seed(5454)
+dataq4 <- tibble(
+  x1=rnorm(100,sd=5),
+  x2=rnorm(100,sd=5),
+  y=as.factor(ifelse(3*x1-x2^2>0,1,-1)))
+ggplot(dataq4,aes(x=x1,y=x2,color=y)) + geom_point()
+dataq4.train <- dataq4[1:50,]
+dataq4.test <- dataq4[51:100,]
+```
+
+linear
+```{r}
+svm41 <- tune(svm,y~.,data=dataq4.train,kernel="linear",
+  ranges=list(cost=c(0.01,0.1,1,5,10,50,100)))
+summary(svm41)
+```
+
+poly
+```{r}
+svm42 <- tune(svm,y~.,data=dataq4.train,kernel="polynomial",
+             ranges=list(cost=c(0.01,0.1,1,5,10,50),degree=2:5))
+summary(svm42)
+```
+
+radial
+```{r} 
+svm43 <- tune(svm,y~.,data=dataq4.train,kernel="radial",
+             ranges=list(cost=c(0.01,0.1,1,5,10,50,100),gamma=c(0.01,0.05,0.1,0.2,0.5,1,2)))
+summary(svm43)
+```
+
+training error
+```{r}
+tribble(
+  ~model, ~error,
+  "linear", mean(dataq4.train$y!=predict(svm41$best.model)),
+  "polynomial", mean(dataq4.train$y!=predict(svm42$best.model)),
+  "radial", mean(dataq4.train$y!=predict(svm43$best.model))
+)
+
+```
+
+test error
+training error
+```{r}
+tribble(
+  ~model, ~error,
+  "linear", mean(dataq4.test$y!=predict(svm41$best.model,newdata=dataq4.test)),
+  "polynomial", mean(dataq4.test$y!=predict(svm42$best.model,newdata=dataq4.test)),
+  "radial", mean(dataq4.test$y!=predict(svm43$best.model,newdata=dataq4.test))
+)
+
+```
+
+Radial outperforms in training and WAY outperforms in test
+
+## Q5
 
 ## Q6
 
