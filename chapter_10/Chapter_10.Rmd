@@ -17,6 +17,29 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The total variance is the sum of the variance present in each tissue sample.  Variance along the first principal component is 1/10 of this sum.
 
-### b. _
+### b. 
+
+The first PC may not perfectly map to the machine type.  For example, if by random chance more T (or C) were run on machine A or B that could be a problem.
+
+Better to me seems to do do a regression that include T vs C and A vs B
+
+### c _simulation_
+
+```{r}
+library(tidyverse)
+genes <- 1000
+samples <- 100
+data <- rnorm(genes*samples) %>% matrix(nrow=genes)
+```
+
+```{r}
+machine <- c(sample(c("A","B"),50,replace = TRUE, prob = c(.8,.2)),
+             sample(c("A","B"),50,replace = TRUE, prob = c(.2,.8)))
+
+
+```
+
+
+
 Q8
 Q10a,b
