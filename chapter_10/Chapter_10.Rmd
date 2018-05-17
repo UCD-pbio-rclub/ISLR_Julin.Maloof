@@ -1,0 +1,22 @@
+---
+title: "Chapter 10"
+author: "Julin N Maloof"
+date: "5/16/2018"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q6
+
+### a.  _explain what is meant by explains 10% of the variation_
+
+The total variance is the sum of the variance present in each tissue sample.  Variance along the first principal component is 1/10 of this sum.
+
+### b. _
+Q8
+Q10a,b
