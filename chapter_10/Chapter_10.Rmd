@@ -42,4 +42,74 @@ machine <- c(sample(c("A","B"),50,replace = TRUE, prob = c(.8,.2)),
 
 
 Q8
-Q10a,b
+
+## Q9
+_Consider the USArrests data. We will now perform hierarchical clustering on the states._
+
+_(a) Using hierarchical clustering with complete linkage and Euclidean distance, cluster the states._
+```{r}
+library(tidyverse)
+library(ISLR)
+library(ggdendro)
+data("USArrests")
+
+head(USArrests)
+summary(USArrests)
+
+hcl.complete.euc <- hclust(dist(USArrests))
+
+ggdendrogram(hcl.complete.euc) + ggtitle("Complete Linkage, Euclidian Distance (unscaled)")
+
+```
+
+
+_(b) Cut the dendrogram at a height that results in three distinct clusters. Which states belong to which clusters?_
+
+```{r}
+clusters.complete.euc <- tibble(
+  label=names(cutree(hcl.complete.euc,3)),
+  cluster=as.character(cutree(hcl.complete.euc,3)))
+clusters.complete.euc
+```
+
+
+```{r}
+hclust.data <- dendro_data(hcl.complete.euc)
+lab <- left_join(label(hclust.data),clusters.complete.euc)
+lab
+hclust.data <- dendro_data(hcl.complete.euc)
+pl <- ggdendrogram(hcl.complete.euc)
+pl + geom_point(aes(x=x,y=y-10,color=cluster),data=lab) +
+  scale_color_brewer(type="qual",palette = 3)
+```
+
+
+_(c) Hierarchically cluster the states using complete linkage and Euclidean distance, after scaling the variables to have standard deviation one._
+
+```{r}
+hcl.complete.euc.scale <- USArrests %>% scale() %>% dist() %>% hclust()
+
+hclust.data.scale <- dendro_data(hcl.complete.euc.scale)
+
+clusters.complete.euc.scale <- tibble(
+  label=names(cutree(hcl.complete.euc.scale,3)),
+  cluster=as.character(cutree(hcl.complete.euc.scale,3)))
+clusters.complete.euc.scale
+```
+
+
+```{r}
+lab <- left_join(label(hclust.data.scale),clusters.complete.euc.scale)
+lab
+hclust.data <- dendro_data(hcl.complete.euc.scale)
+pl <- ggdendrogram(hcl.complete.euc.scale)
+pl + geom_point(aes(x=x,y=y-.1,color=cluster),data=lab) +
+  scale_color_brewer(type="qual",palette = 3)
+```
+
+_(d) What effect does scaling the variables have on the hierarchical clustering obtained? In your opinion, should the variables be scaled before the inter-observation dissimilarities are computed? Provide a justification for your answer._
+
+
+## Q10
+
+## Q11
