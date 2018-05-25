@@ -109,7 +109,136 @@ pl + geom_point(aes(x=x,y=y-.1,color=cluster),data=lab) +
 
 _(d) What effect does scaling the variables have on the hierarchical clustering obtained? In your opinion, should the variables be scaled before the inter-observation dissimilarities are computed? Provide a justification for your answer._
 
+Unscaled, the states are split into three pretty equal groups and these are clearly separated.  Scaled one group dominates with two smaller groups, and the distinctions are less clear.  A heat map may help...
+
 
 ## Q10
 
+_In this problem, you will generate simulated data, and then perform PCA and K-means clustering on the data._
+
+(a) Generate a simulated data set with 20 observations in each of three classes (i.e. 60 observations total), and 50 variables.
+Hint: There are a number of functions in R that you can use to generate data. One example is the rnorm() function; runif() is another option. Be sure to add a mean shift to the observations in each class so that there are three distinct classes.
+
+```{r}
+data10 <- matrix(rnorm(20*3*50, mean=c(10:12),sd=2),nrow=60,byrow = FALSE)
+rowMeans(data10)
+```
+
+_(b) Perform PCA on the 60 observations and plot the first two principal component score vectors. Use a different color to indicate the observations in each of the three classes. If the three classes appear separated in this plot, then continue on to part (c). If not, then return to part (a) and modify the simulation so that there is greater separation between the three classes. Do not continue to part (c) until the three classes show at least some separation in the first two principal component score vectors._
+
+```{r}
+pc10 <- prcomp(data10)
+str(pc10)
+dim(pc10$x)
+x <- pc10$x %>% as.tibble() %>% mutate(group=as.character(rep(1:3,20)))
+ggplot(x,aes(x=PC1,y=PC2,color=group)) +
+  geom_point(shape=16,size=2)
+```
+
+
+(c) Perform K-means clustering of the observations with K = 3. How well do the clusters that you obtained in K-means clustering compare to the true class labels?
+Hint: You can use the table() function in R to compare the true class labels to the class labels obtained by clustering. Be careful how you interpret the results: K-means clustering will arbitrarily number the clusters, so you cannot simply check whether the true class labels and clustering labels are the same.
+
+```{r}
+kc10.3 <- kmeans(data10,3,nstart=15)
+x <- x %>% mutate(k3=as.character(kc10.3$cluster))
+ggplot(x,aes(x=PC1,y=PC2)) +
+  geom_point(aes(color=k3,fill=group),shape=21,size=3,stroke=3) 
+```
+
+```{r}
+table(x$group,x$k3)
+(17+15+19) / 60
+```
+
+worked pretty, well, 85% success
+
+(d) Perform K-means clustering with K = 2. Describe your results.
+
+```{r}
+kc10.2 <- kmeans(data10,2,nstart=15)
+x <- x %>% mutate(k2=as.character(kc10.2$cluster))
+ggplot(x,aes(x=PC1,y=PC2)) +
+  geom_point(aes(color=k2,fill=group),shape=21,size=3,stroke=3) 
+table(x$group,x$k2)
+```
+split the middle group ~ 50/50 between the two k groups.
+
+(e) Now perform K-means clustering with K = 4, and describe your
+results.
+
+```{r}
+kc10.4 <- kmeans(data10,4,nstart=15)
+x <- x %>% mutate(k4=as.character(kc10.4$cluster))
+ggplot(x,aes(x=PC1,y=PC2)) +
+  geom_point(aes(color=k4,fill=group),shape=21,size=3,stroke=3) 
+table(x$group,x$k4)
+```
+
+split the middle group into two
+
+
+(f) Now perform K-means clustering with K = 3 on the first two principal component score vectors, rather than on the raw data. That is, perform K-means clustering on the 60 × 2 matrix of which the first column is the first principal component score vector, and the second column is the second principal component score vector. Comment on the results.
+
+```{r}
+kc10.pc <- x %>% select(PC1,PC2) %>% kmeans(3,nstart=15)
+x <- x %>% mutate(kpc=as.character(kc10.pc$cluster))
+ggplot(x,aes(x=PC1,y=PC2)) +
+  geom_point(aes(color=kpc,fill=group),shape=21,size=3,stroke=3) 
+table(true=x$group,predicted=x$kpc)
+```
+
+didn't do very well; messed up cluster 2
+
+_(g) Using the scale() function, perform K-means clustering with K = 3 on the data after scaling each variable to have standard deviation one. How do these results compare to those obtained in (b)? Explain._
+
+Since everything is almost on the same scale in the firt place I expect no difference.
+
+```{r}
+kc10.scale <- data10 %>% scale() %>% kmeans(3,nstart=15)
+x <- x %>% mutate(kscale=as.character(kc10.scale$cluster))
+ggplot(x,aes(x=PC1,y=PC2)) +
+  geom_point(aes(color=kscale,fill=group),shape=21,size=3,stroke=3) 
+table(true=x$group,predicted=x$kscale)
+(15+18+19)/60
+```
+
+slightly better.  Random chance?
+
 ## Q11
+_On the book website, www.StatLearning.com, there is a gene expression data set (Ch10Ex11.csv) that consists of 40 tissue samples with measurements on 1,000 genes. The first 20 samples are from healthy patients, while the second 20 are from a diseased group._
+
+
+_(a) Load in the data using read.csv(). You will need to select header=F._
+
+```{r}
+con <- curl::curl("http://www-bcf.usc.edu/~gareth/ISL/Ch10Ex11.csv")
+data.exp <- read_csv(con,col_names = FALSE)
+head(data.exp)
+```
+_(b) Apply hierarchical clustering to the samples using correlation- based distance, and plot the dendrogram. Do the genes separate the samples into the two groups? Do your results depend on the type of linkage used?_
+
+```{r}
+dd <- as.dist(1-cor(data.exp))
+hc.complete <- hclust(dd,method="complete")
+hc.single <- hclust(dd,method="single")
+hc.average <- hclust(dd,method="average")
+```
+
+```{r}
+ggdendrogram(hc.complete) + ggtitle("complete")
+```
+
+```{r}
+ggdendrogram(hc.single) + ggtitle("single")
+```
+
+```{r}
+ggdendrogram(hc.average) + ggtitle("average")
+```
+None of these make a good split into two groups, although "complete" does best.
+
+(c) Your collaborator wants to know which genes differ the most across the two groups. Suggest a way to answer this question, and apply it here.
+
+Could do PCA and look at the loadings of the PC that separates the groups...
+
