@@ -242,3 +242,20 @@ None of these make a good split into two groups, although "complete" does best.
 
 Could do PCA and look at the loadings of the PC that separates the groups...
 
+Or binomial lasso
+
+```{r}
+library(glmnet)
+
+cvglm11 <- cv.glmnet(x=t(data.exp),y=rep(c(0,1),each=20),alpha=1,family="binomial")
+
+plot(cvglm11)
+```
+
+```{r}
+cvglm11$lambda.1se
+glmnet11 <- glmnet(x=t(data.exp),y=rep(c(0,1),each=20),alpha=1, lambda=cvglm11$lambda.1se, family="binomial")
+
+sort(glmnet11$beta[glmnet11$beta[,1] > 0,],decreasing = TRUE)
+```
+

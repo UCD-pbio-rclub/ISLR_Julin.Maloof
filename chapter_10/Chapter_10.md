@@ -29,18 +29,22 @@ library(tidyverse)
 ```
 
 ```
-## ── Attaching packages ──────────────── tidyverse 1.2.1 ──
+## ── Attaching packages ─────────────────────── tidyverse 1.2.1 ──
 ```
 
 ```
 ## ✔ ggplot2 2.2.1     ✔ purrr   0.2.4
-## ✔ tibble  1.4.2     ✔ dplyr   0.7.4
-## ✔ tidyr   0.8.0     ✔ stringr 1.3.0
-## ✔ readr   1.1.1     ✔ forcats 0.3.0
+## ✔ tibble  1.3.4     ✔ dplyr   0.7.4
+## ✔ tidyr   0.7.2     ✔ stringr 1.3.0
+## ✔ readr   1.1.1     ✔ forcats 0.2.0
 ```
 
 ```
-## ── Conflicts ─────────────────── tidyverse_conflicts() ──
+## Warning: package 'stringr' was built under R version 3.4.3
+```
+
+```
+## ── Conflicts ────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
 ```
@@ -120,18 +124,18 @@ clusters.complete.euc
 
 ```
 ## # A tibble: 50 x 2
-##    label       cluster
-##    <chr>       <chr>  
-##  1 Alabama     1      
-##  2 Alaska      1      
-##  3 Arizona     1      
-##  4 Arkansas    2      
-##  5 California  1      
-##  6 Colorado    2      
-##  7 Connecticut 3      
-##  8 Delaware    1      
-##  9 Florida     1      
-## 10 Georgia     2      
+##          label cluster
+##          <chr>   <chr>
+##  1     Alabama       1
+##  2      Alaska       1
+##  3     Arizona       1
+##  4    Arkansas       2
+##  5  California       1
+##  6    Colorado       2
+##  7 Connecticut       3
+##  8    Delaware       1
+##  9     Florida       1
+## 10     Georgia       2
 ## # ... with 40 more rows
 ```
 
@@ -235,18 +239,18 @@ clusters.complete.euc.scale
 
 ```
 ## # A tibble: 50 x 2
-##    label       cluster
-##    <chr>       <chr>  
-##  1 Alabama     1      
-##  2 Alaska      1      
-##  3 Arizona     2      
-##  4 Arkansas    3      
-##  5 California  2      
-##  6 Colorado    2      
-##  7 Connecticut 3      
-##  8 Delaware    3      
-##  9 Florida     2      
-## 10 Georgia     1      
+##          label cluster
+##          <chr>   <chr>
+##  1     Alabama       1
+##  2      Alaska       1
+##  3     Arizona       2
+##  4    Arkansas       3
+##  5  California       2
+##  6    Colorado       2
+##  7 Connecticut       3
+##  8    Delaware       3
+##  9     Florida       2
+## 10     Georgia       1
 ## # ... with 40 more rows
 ```
 
@@ -351,15 +355,15 @@ rowMeans(data10)
 ```
 
 ```
-##  [1]  9.673926 11.053855 12.164866  9.720507 11.538385 12.384996  9.822750
-##  [8] 10.693742 11.521911  9.639155 11.114425 12.201618  9.998225 10.884214
-## [15] 11.672784  9.816310 10.973330 12.369390 10.037771 10.666731 11.788250
-## [22] 10.316896 10.641626 12.003132  9.609307 10.809211 11.985554  9.878291
-## [29] 11.266264 12.161370  9.692516 11.212036 11.766159 10.418700 10.781567
-## [36] 12.103018 10.546368 10.929887 11.526859 10.452747 10.764683 11.954901
-## [43] 10.031941 10.623131 11.752978 10.263495 11.339071 12.474418  9.892284
-## [50] 10.933426 12.236122 10.120604 10.617791 11.828103 10.050814 10.807323
-## [57] 12.194254  9.866137 10.776954 11.835774
+##  [1]  9.613244 10.944579 12.245357 10.428692 11.027600 12.086344 10.007546
+##  [8] 11.250475 12.207995 10.250072 11.140500 12.264741  9.436429 10.448984
+## [15] 11.411794 10.131069 10.908681 12.010677 10.066950 10.755492 12.255940
+## [22] 10.155162 10.746524 11.429040  9.580165 10.972279 12.061457 10.119966
+## [29] 10.635442 12.076602  9.762945 10.889738 12.114782 10.013195 11.671004
+## [36] 12.121918  9.931678 11.555050 12.287228 10.162595 10.996264 12.244997
+## [43]  9.585665 11.221149 11.760278  9.764283 10.869036 11.457917 10.157347
+## [50] 10.771460 12.055390 10.355728 10.833554 12.344527 10.123282 11.040635
+## [57] 12.248427  9.944270 11.702646 11.481796
 ```
 
 _(b) Perform PCA on the 60 observations and plot the first two principal component score vectors. Use a different color to indicate the observations in each of the three classes. If the three classes appear separated in this plot, then continue on to part (c). If not, then return to part (a) and modify the simulation so that there is greater separation between the three classes. Do not continue to part (c) until the three classes show at least some separation in the first two principal component score vectors._
@@ -372,14 +376,14 @@ str(pc10)
 
 ```
 ## List of 5
-##  $ sdev    : num [1:50] 6.38 3.75 3.59 3.46 3.32 ...
-##  $ rotation: num [1:50, 1:50] 0.11 0.161 0.191 0.165 0.149 ...
+##  $ sdev    : num [1:50] 6.5 3.58 3.43 3.39 3.24 ...
+##  $ rotation: num [1:50, 1:50] -0.159 -0.127 -0.183 -0.156 -0.118 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ##   .. ..$ : NULL
 ##   .. ..$ : chr [1:50] "PC1" "PC2" "PC3" "PC4" ...
-##  $ center  : num [1:50] 11.1 11.5 10.4 11.3 10.8 ...
+##  $ center  : num [1:50] 10.9 10.5 11.4 11.3 11.3 ...
 ##  $ scale   : logi FALSE
-##  $ x       : num [1:60, 1:50] -8.08 1.17 7.88 -9.73 4.81 ...
+##  $ x       : num [1:60, 1:50] 9.5457 0.0854 -8.9276 4.447 0.5839 ...
 ##   ..- attr(*, "dimnames")=List of 2
 ##   .. ..$ : NULL
 ##   .. ..$ : chr [1:50] "PC1" "PC2" "PC3" "PC4" ...
@@ -424,9 +428,9 @@ table(x$group,x$k3)
 ```
 ##    
 ##      1  2  3
-##   1 14  0  6
-##   2  2  5 13
-##   3  0 20  0
+##   1  0  1 19
+##   2  2 16  2
+##   3 17  3  0
 ```
 
 ```r
@@ -458,9 +462,9 @@ table(x$group,x$k2)
 ```
 ##    
 ##      1  2
-##   1  0 20
-##   2  6 14
-##   3 20  0
+##   1 20  0
+##   2 13  7
+##   3  0 20
 ```
 split the middle group ~ 50/50 between the two k groups.
 
@@ -484,9 +488,9 @@ table(x$group,x$k4)
 ```
 ##    
 ##      1  2  3  4
-##   1  0  0 14  6
-##   2  4  2  2 12
-##   3 12  8  0  0
+##   1  0  0  3 17
+##   2 10  2  7  1
+##   3  2 17  1  0
 ```
 
 split the middle group into two
@@ -511,9 +515,9 @@ table(true=x$group,predicted=x$kpc)
 ```
 ##     predicted
 ## true  1  2  3
-##    1  2 18  0
-##    2 17  2  1
-##    3  0  0 20
+##    1  0  1 19
+##    2  3 17  0
+##    3 17  3  0
 ```
 
 didn't do very well; messed up cluster 2
@@ -539,9 +543,9 @@ table(true=x$group,predicted=x$kscale)
 ```
 ##     predicted
 ## true  1  2  3
-##    1 15  5  0
-##    2  1 14  5
-##    3  0  0 20
+##    1 19  1  0
+##    2  0 18  2
+##    3  0  3 17
 ```
 
 ```r
@@ -583,20 +587,20 @@ head(data.exp)
 
 ```
 ## # A tibble: 6 x 40
-##        X1     X2     X3     X4     X5     X6      X7      X8      X9
-##     <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>   <dbl>   <dbl>   <dbl>
-## 1 -0.962   0.442 -0.975  1.42   0.819  0.316 -0.0250 -0.0640  0.0315
-## 2 -0.293  -1.14   0.196 -1.28  -0.251  2.51  -0.922   0.0595 -1.41  
-## 3  0.259  -0.973  0.588 -0.800 -1.82  -2.06  -0.0648  1.59   -0.173 
-## 4 -1.15   -2.21  -0.862  0.631  0.952 -1.17  -0.392   1.06   -0.350 
-## 5  0.196   0.593  0.283  0.247  1.98  -0.871 -0.990  -1.03   -1.11  
-## 6  0.0301 -0.691 -0.403 -0.730 -0.364  1.13  -1.40   -0.806  -1.24  
-## # ... with 31 more variables: X10 <dbl>, X11 <dbl>, X12 <dbl>, X13 <dbl>,
-## #   X14 <dbl>, X15 <dbl>, X16 <dbl>, X17 <dbl>, X18 <dbl>, X19 <dbl>,
-## #   X20 <dbl>, X21 <dbl>, X22 <dbl>, X23 <dbl>, X24 <dbl>, X25 <dbl>,
-## #   X26 <dbl>, X27 <dbl>, X28 <dbl>, X29 <dbl>, X30 <dbl>, X31 <dbl>,
-## #   X32 <dbl>, X33 <dbl>, X34 <dbl>, X35 <dbl>, X36 <dbl>, X37 <dbl>,
-## #   X38 <dbl>, X39 <dbl>, X40 <dbl>
+##            X1         X2         X3         X4         X5         X6
+##         <dbl>      <dbl>      <dbl>      <dbl>      <dbl>      <dbl>
+## 1 -0.96193340  0.4418028 -0.9750051  1.4175040  0.8188148  0.3162937
+## 2 -0.29252570 -1.1392670  0.1958370 -1.2811210 -0.2514393  2.5119970
+## 3  0.25878820 -0.9728448  0.5884858 -0.8002581 -1.8203980 -2.0589240
+## 4 -1.15213200 -2.2131680 -0.8615249  0.6309253  0.9517719 -1.1657240
+## 5  0.19578280  0.5933059  0.2829921  0.2471472  1.9786680 -0.8710180
+## 6  0.03012394 -0.6910143 -0.4034258 -0.7298590 -0.3640986  1.1253490
+## # ... with 34 more variables: X7 <dbl>, X8 <dbl>, X9 <dbl>, X10 <dbl>,
+## #   X11 <dbl>, X12 <dbl>, X13 <dbl>, X14 <dbl>, X15 <dbl>, X16 <dbl>,
+## #   X17 <dbl>, X18 <dbl>, X19 <dbl>, X20 <dbl>, X21 <dbl>, X22 <dbl>,
+## #   X23 <dbl>, X24 <dbl>, X25 <dbl>, X26 <dbl>, X27 <dbl>, X28 <dbl>,
+## #   X29 <dbl>, X30 <dbl>, X31 <dbl>, X32 <dbl>, X33 <dbl>, X34 <dbl>,
+## #   X35 <dbl>, X36 <dbl>, X37 <dbl>, X38 <dbl>, X39 <dbl>, X40 <dbl>
 ```
 _(b) Apply hierarchical clustering to the samples using correlation- based distance, and plot the dendrogram. Do the genes separate the samples into the two groups? Do your results depend on the type of linkage used?_
 
@@ -633,4 +637,79 @@ None of these make a good split into two groups, although "complete" does best.
 (c) Your collaborator wants to know which genes differ the most across the two groups. Suggest a way to answer this question, and apply it here.
 
 Could do PCA and look at the loadings of the PC that separates the groups...
+
+Or binomial lasso
+
+
+```r
+library(glmnet)
+```
+
+```
+## Loading required package: Matrix
+```
+
+```
+## 
+## Attaching package: 'Matrix'
+```
+
+```
+## The following object is masked from 'package:tidyr':
+## 
+##     expand
+```
+
+```
+## Loading required package: foreach
+```
+
+```
+## 
+## Attaching package: 'foreach'
+```
+
+```
+## The following objects are masked from 'package:purrr':
+## 
+##     accumulate, when
+```
+
+```
+## Loaded glmnet 2.0-13
+```
+
+```r
+cvglm11 <- cv.glmnet(x=t(data.exp),y=rep(c(0,1),each=20),alpha=1,family="binomial")
+
+plot(cvglm11)
+```
+
+![](Chapter_10_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
+
+```r
+cvglm11$lambda.1se
+```
+
+```
+## [1] 0.005169919
+```
+
+```r
+glmnet11 <- glmnet(x=t(data.exp),y=rep(c(0,1),each=20),alpha=1, lambda=cvglm11$lambda.1se, family="binomial")
+
+sort(glmnet11$beta[glmnet11$beta[,1] > 0,],decreasing = TRUE)
+```
+
+```
+##        V600        V589        V565        V588        V570        V538 
+## 0.723033492 0.580628833 0.446321091 0.369333913 0.295406333 0.242075867 
+##        V502        V505        V583        V561        V584        V599 
+## 0.228681448 0.202033272 0.189590955 0.166890560 0.141928629 0.132575677 
+##         V11        V574        V569        V503        V590        V522 
+## 0.130907520 0.113004483 0.101358078 0.069604610 0.048523567 0.037126707 
+##         V13        V508        V582        V516        V554 
+## 0.030323840 0.015595826 0.013689514 0.010348587 0.004372943
+```
 
