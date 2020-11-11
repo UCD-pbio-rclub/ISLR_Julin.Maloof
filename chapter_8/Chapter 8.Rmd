@@ -155,15 +155,15 @@ plot(tree1.cv)
 tree1.cv
 ```
 
-CV would suggest not pruning.  I guess we could prune to 16...
+Maybe prune to 8
 
 ```{r}
-tree1.prune <- prune.tree(tree1,best=16)
+tree1.prune <- prune.tree(tree1,best=8)
 tree1.prune.predict <- predict(tree1.prune, newdata = carseats.test)
 (MSE <- mean((tree1.prune.predict-carseats.test$Sales)^2))
 ```
 
-slight reduction in MSE
+Worse MSE
 
 _(d) Use the bagging approach in order to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important._
 
