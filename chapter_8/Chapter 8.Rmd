@@ -213,6 +213,7 @@ head(OJ)
 _(a) Create a training set containing a random sample of 800 observations, and a test set containing the remaining observations._
 
 ```{r}
+set.seed(111820)
 train <- sample(1:nrow(OJ), size = 800)
 oj.train <- OJ[train,]
 oj.test <- OJ[-train,]
@@ -225,7 +226,7 @@ tree1 <- tree(Purchase ~ . , data=oj.train)
 summary(tree1)
 ```
 
-8 nodes with three predictors, good training prediction (0.155)
+7 nodes with two predictors, OK training prediction (0.17)
 
 _(c) Type in the name of the tree object in order to get a detailed text output. Pick one of the terminal nodes, and interpret the information displayed._
 
@@ -233,7 +234,7 @@ _(c) Type in the name of the tree object in order to get a detailed text output.
 tree1
 ```
 
-For node 7, these are customers whose CH brand loyalty is > 0.76.  There are 265 such customers.  The deviance at this node is 97.72 (what does this mean) and 95% of the customers at this node bought CH.
+For node 7, these are customers whose CH brand loyalty is > 0.76.  There are 267 such customers.  The deviance at this node is 97.72 (what does this mean) and 95% of the customers at this node bought CH.
 
 _(d) Create a plot of the tree, and interpret the results._
 
@@ -255,7 +256,7 @@ table(prediction=oj.prediction,observed=oj.test$Purchase)
 (tree1.accuracy <- mean(oj.prediction==oj.test$Purchase))
 ```
 
-81% prediction accuracy
+83% prediction accuracy
 
 _(f) Apply the cv.tree() function to the training set in order to determine the optimal tree size._
 
@@ -265,22 +266,23 @@ tree1.cv <- cv.tree(tree1,FUN=prune.misclass)
 tree1.cv
 ```
 
-best size appears to be 7
+best size appears to be 5
 
 _(g) Produce a plot with tree size on the x-axis and cross-validated classification error rate on the y-axis._
 
 ```{r}
-plot(tree1.cv$size, tree1.cv$dev / nrow(oj.test),type="l")
+plot(tree1.cv$size, tree1.cv$dev,type="l")
 ```
 
-_(h) Which tree size corresponds to the lowest cross-validated classi- fication error rate?_
 
-2
+_(h) Which tree size corresponds to the lowest cross-validated classification error rate?_
+
+5
 
 _(i) Produce a pruned tree corresponding to the optimal tree size obtained using cross-validation. If cross-validation does not lead to selection of a pruned tree, then create a pruned tree with five terminal nodes._
 
 ```{r}
-tree1.prune <- prune.misclass(tree1,best = 2)
+tree1.prune <- prune.misclass(tree1,best = 5)
 ```
 
 _(j) Compare the training error rates between the pruned and un- pruned trees. Which is higher?_
@@ -290,7 +292,7 @@ summary(tree1)
 summary(tree1.prune)
 ```
 
-The unpruned tree has lower training error rate
+Same!
 
 _(k) Compare the test error rates between the pruned and unpruned trees. Which is higher?_
 
@@ -301,7 +303,7 @@ tree1.accuracy
 (prune.accuracy <- mean(prune.predict==oj.test$Purchase))
 ```
 
-Test accuracy is better on the pruned tree
+Test accuracy is the same!
 
 ## Q10
 
@@ -339,7 +341,7 @@ names(hitters.gbm) <- lambdas
 
 gbm.train.mse <- sapply(hitters.gbm,function(x) x$train.error[1000])
 
-plot(lambdas,gbm.train.mse,type="b")
+plot(log10(lambdas),gbm.train.mse,type="b")
 ```
 
 _(d) Produce a plot with different shrinkage values on the x-axis and the corresponding test set MSE on the y-axis._
@@ -350,7 +352,7 @@ gbm.test.mse <- sapply(hitters.gbm, function(f) {
 }
 )
 
-plot(lambdas,gbm.test.mse,type="b")
+plot(log10(lambdas),gbm.test.mse,type="b")
 ```
 
 The best lambda in this case seems to be 0.10
@@ -469,6 +471,7 @@ caravan.gbm <- gbm(Purchase ~ ., data=caravan.train, n.trees=1000,shrinkage=0.01
 summary(caravan.gbm)
 ```
 
+PPERSAUT: automobile policy contributions
 
 _(c) Use the boosting model to predict the response on the test data. Predict that a person will make a purchase if the estimated prob- ability of purchase is greater than 20 %. Form a confusion ma- trix. What fraction of the people predicted to make a purchase do in fact make one? How does this compare with the results obtained from applying KNN or logistic regression to this data set?_
 
@@ -478,7 +481,7 @@ caravan.gbm.predict <- ifelse(caravan.gbm.predict>.2,1,0)
 table(predicted=caravan.gbm.predict,observed=caravan.test$Purchase)
 
 cat("fraction of predicted purchasers making purchase: ")
-35/(128+35)
+36/(122+36)
 
 cat("fraction of all purchasers making purchase (in test set): ")
 mean(caravan.test$Purchase)
