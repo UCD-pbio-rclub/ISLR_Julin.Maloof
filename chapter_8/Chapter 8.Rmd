@@ -130,8 +130,8 @@ _(a) Split the data set into a training set and a test set._
 data("Carseats")
 head(Carseats)
 dim(Carseats)
-set.seed(040518)
-train <- sample(1:nrow(Carseats),size=250)
+set.seed(10)
+train <- sample(1:nrow(Carseats),size=200)
 carseats.train <- Carseats[train,]
 carseats.test <- Carseats[-train,]
 ```
@@ -155,15 +155,15 @@ plot(tree1.cv)
 tree1.cv
 ```
 
-Maybe prune to 8
+Maybe prune to 6
 
 ```{r}
-tree1.prune <- prune.tree(tree1,best=8)
+tree1.prune <- prune.tree(tree1,best=6)
 tree1.prune.predict <- predict(tree1.prune, newdata = carseats.test)
 (MSE <- mean((tree1.prune.predict-carseats.test$Sales)^2))
 ```
 
-Worse MSE
+slightly better MSE
 
 _(d) Use the bagging approach in order to analyze this data. What test MSE do you obtain? Use the importance() function to determine which variables are most important._
 
